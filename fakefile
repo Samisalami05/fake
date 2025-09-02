@@ -1,4 +1,4 @@
 main: (dependency, ) {
-	"gcc" "src/main.c" "src/lex.c" "src/arraylist.c" "-o" "fake",
+	"gcc" "-Wall" "src/main.c" "src/lex.c" "src/arraylist.c" "src/parse_args.c" "-o" "fake",
 	"echo" "plswork",
 }

@@ -10,6 +10,7 @@
 #include <sys/wait.h>
 
 #include "fake.h"
+#include "parse_args.h"
 
 #define NOT_FOUND 0xFFFFFFFF
 
@@ -152,6 +153,8 @@ int main(int argc, char **argv) {
 		.file_size = file_stat.st_size,
 	};
 	arraylist_init(&state.unlinked_nodes, sizeof(unlinked_node*));
+
+	parse_args(argv);
 	lex(&state);
 	parse_fakefile(&state);
 
