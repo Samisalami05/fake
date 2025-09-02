@@ -17,7 +17,6 @@ void lex(parse_state *state) {
 	state->tokens = malloc(sizeof(token)*state->token_allocated);
 	uint32_t curr = 0;
 dont_tell_johnny: while (curr < state->file_size) {
-		//printf("what is happening: '%c'\n", state->file_str[curr]);
 		switch (state->file_str[curr]) {
 			case ':':
 				state->tokens[state->token_count++] = (token){
@@ -157,7 +156,19 @@ dont_tell_johnny: while (curr < state->file_size) {
 					exit(1);
 				}
 				break;
-			default: {
+			// comments!
+			case '/':
+				// safe, file str always ends with 0!
+				if (state->file_str[curr+1] == '/') {
+					curr += 1;
+					for (; curr < state->file_size; curr++) {
+						if (state->file_str[curr] == '\n') break;
+					}
+					continue;
+				} else {
+					goto failure;
+				}
+failure: default: {
 						 printf("illegal character\n");
 						 exit(1);
 					 };

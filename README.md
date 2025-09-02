@@ -18,6 +18,7 @@ To get more information, run:
 ```
 fake --help
 ```
+To know how fakefile works, check out examples in this codebase.
 
 # LSP support
 To get lsps to care about your fake configuration, use the [bear](https://github.com/rizsotto/Bear) project like below for a fakefile configured working directory:

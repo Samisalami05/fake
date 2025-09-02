@@ -146,7 +146,10 @@ int main(int argc, char **argv) {
 	}
 	struct stat file_stat;
 	fstat(fd, &file_stat);
-	char *file_str = mmap(NULL, file_stat.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+
+	// +1 => to not need to care about out-of-bounds checks in the lexer
+	size_t allocation_size = file_stat.st_size+1; // not the same as file size!
+	char *file_str = mmap(NULL, allocation_size, PROT_READ, MAP_PRIVATE, fd, 0);
 
 	parse_state state = {
 		.file_str = file_str,
@@ -169,5 +172,5 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	munmap(file_str, file_stat.st_size);
+	munmap(file_str, allocation_size);
 }
