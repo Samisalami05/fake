@@ -1,3 +1,4 @@
 main: (dependency, ) {
 	"gcc" "src/main.c" "src/lex.c" "src/arraylist.c" "-o" "fake",
+	"echo" "plswork",
 }

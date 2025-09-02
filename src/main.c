@@ -7,6 +7,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/mman.h>
+#include <sys/wait.h>
 
 #include "fake.h"
 
@@ -119,11 +120,19 @@ void exec_command(parse_state *state, command *c) {
 		arg[refs[i].len] = 0;
 
 		argv[i] = arg;
-		printf("arg: %s\n", argv[i]);
+		//printf("arg: %s\n", argv[i]);
 	}
 
-	if (execvp(argv[0], argv) == -1) {
-		perror("execvp");
+	uint32_t pid = fork();
+	if (pid == 0) {
+		if (execvp(argv[0], argv) == -1) {
+			perror("execvp");
+			exit(1);
+		}
+	} else if (pid > 0) {
+		wait(NULL); // wait for execvp to finish
+	} else {
+		printf("goofy moment\n");
 		exit(1);
 	}
 }
@@ -152,8 +161,6 @@ int main(int argc, char **argv) {
 		command **commands = node->commands.ptr;
 		
 		str_ref name_ref = nodes[i]->name;
-		//printf("name: \n");
-		//write(STDOUT_FILENO, &file_str[name_ref.src], name_ref.len);
 		for (uint32_t j = 0; j < node->commands.count; j++) {
 			exec_command(&state, commands[j]);
 		}
