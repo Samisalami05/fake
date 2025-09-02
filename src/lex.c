@@ -3,6 +3,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+
+void printErr(parse_state* state, uint32_t curr, char* message);
+
 void lex(parse_state *state) {
 	uint8_t identifier_map[256] = {0};
 	for (uint32_t i = 0; i < 256; i++) {
@@ -70,7 +73,8 @@ dont_tell_johnny: while (curr < state->file_size) {
 			case '8':
 			case '9':
 				{
-					printf("breaking bad (this code)\n");
+					//printf("breaking bad (this code)\n");
+					printErr(state, curr, "breaking bad (this code)"); // Maybe should not be printErr
 					exit(1);
 				}
 			// small letters
@@ -153,12 +157,12 @@ dont_tell_johnny: while (curr < state->file_size) {
 							goto dont_tell_johnny;
 						}
 					}
-					printf("found no matching '\"'\n");
+					printErr(state, curr, "found no matching '\"'");
 					exit(1);
 				}
 				break;
 			default: {
-						 printf("illegal character\n");
+						 printErr(state, curr, "illegal character");
 						 exit(1);
 					 };
 		}
@@ -186,4 +190,56 @@ str_ref get_token_str(parse_state *state, uint32_t token_index) {
 		.src = src,
 		.len = i-src,
 	};
+}
+
+uint32_t getLineStart(parse_state* state, uint32_t curr) {
+	uint32_t loc = curr;
+	while (loc != 0 && state->file_str[loc - 1] != '\n') {
+		loc--;
+	}
+	return loc;
+}
+
+// Includes '\n'
+uint32_t getLineEnd(parse_state* state, uint32_t curr) {
+	uint32_t loc = curr;
+	while (loc < state->file_size && state->file_str[loc] != '\n') {
+		loc++;
+	}
+	return loc;
+}
+
+// Todo: fix problem with line start/end when colon is not in second command
+// Todo: buffer optimize the prints
+// Todo: maybe move to a different file so it can be included in main.c
+void printErr(parse_state* state, uint32_t curr, char* message) {
+	uint32_t lineStart = getLineStart(state, curr);
+	uint32_t lineEnd = getLineEnd(state, curr);
+
+	uint32_t tabCount = 0;
+	
+	//printf("char: %c, start: %u, end: %u\n", state->file_str[curr], lineStart, lineEnd);
+
+	fprintf(stderr, "%u: \033[1;31merror:\033[0m %s\n", curr, message);
+	
+	// Print line
+	for (int i = lineStart; i < lineEnd; i++) {
+		char c = state->file_str[i];
+		if (c == '\t') tabCount++;
+		printf("%c", c);
+	}
+	
+	printf("\n");
+	
+	// Print empty space for arrow
+	for (int i = 0; i < tabCount; i++) {
+		printf("\t");
+	}
+	for (int i = lineStart + tabCount; i < curr; i++) {
+		printf(" ");
+	}
+
+	printf("\033[1;31m^\033[0m"); // Print red arrow
+
+	printf("\n");
 }
