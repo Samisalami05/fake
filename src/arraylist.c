@@ -23,3 +23,10 @@ void arraylist_append(arraylist *list, void *elem)
 	memcpy(&ptr[list->count*list->size_per_elem], elem, list->size_per_elem);
 	list->count++;
 }
+
+// Todo: Use pointers to arraylist instead of &arraylist to eliminate valgrind error here.
+void arraylist_deinit(arraylist *list) {
+	if (list->allocated > 0) {
+		free(list->ptr);
+	}
+}
