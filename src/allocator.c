@@ -10,6 +10,7 @@ arena* arena_init() {
 void* arena_alloc(arena* a, size_t size) {
 	void* p = malloc(size);
 	arraylist_append(&a->data, p);
+	return p;
 }
 
 void arena_reset(arena* a) {
