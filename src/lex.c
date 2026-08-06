@@ -1,24 +1,51 @@
+#include "arraylist.h"
 #include "fake.h"
 
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 
-static void append_token(parse_state* state, token_type type, uint32_t index) {
-	state->tokens[state->token_count++] = (token){
+static void append_token_from(Lexer* lexer, token_type type, uint32_t index) {
+	arraylist_append(&lexer->tokens, &(token){
 		.tag = type,
 		.index = index,
+	});
+}
+
+static void append_token(Lexer* lexer, token_type type) {
+	append_token_from(lexer, type, lexer->pos);
+}
+
+
+// Takes the current character and makes it into token and increments curr
+static void lex_single(Lexer* lexer, token_type type) {
+	append_token(lexer, type);
+	lexer->pos++;
+}
+
+static bool is_at_end(Lexer* lexer) {
+	return lexer->pos >= lexer->file_size;
+}
+
+static char curr(Lexer* lexer) {
+	return lexer->file[lexer->pos];
+}
+
+FileView lexer_get_view(Lexer* lexer) {
+	return (FileView){
+		.ptr = lexer->file,
+		.size = lexer->file_size,
 	};
 }
 
-// Takes the current character and makes it into token and increments curr
-static void lex_single(parse_state* state, token_type type) {
-	append_token(state, type, state->curr); // state->curr IS THE WRONG CURR!!!!
-	state->curr++;
-}
+void lex(Lexer* lexer) {
+	arraylist_init(&lexer->tokens, sizeof(token));
+	lexer->pos = 0;
 
-void lex(parse_state *state) {
+	if (!lexer->file || lexer->file_size == 0) return;
+
 	uint8_t identifier_map[256] = {0};
 	for (uint32_t i = 0; i < 256; i++) {
 		if (i >= 'a' && i <= 'z') identifier_map[i] = 1;
@@ -30,29 +57,25 @@ void lex(parse_state *state) {
 		if (i == '-') identifier_map[i] = 1;
 	}
 
-	state->token_allocated = 65536;
-	state->token_count = 0;
-	state->tokens = malloc(sizeof(token)*state->token_allocated);
-	uint32_t curr = 0;
-dont_tell_johnny: while (curr < state->file_size) {
-		switch (state->file_str[curr]) {
+    while (!is_at_end(lexer)) {
+		switch (curr(lexer)) {
 			case ':':
-				append_token(state, TOKEN_COLON, curr);
+				append_token(lexer, TOKEN_COLON);
 				break;
 			case ',':
-				append_token(state, TOKEN_COMMA, curr);
+				append_token(lexer, TOKEN_COMMA);
 				break;
 			case '{':
-				append_token(state, TOKEN_CURLY_L, curr);
+				append_token(lexer, TOKEN_CURLY_L);
 				break;
 			case '}':
-				append_token(state, TOKEN_CURLY_R, curr);
+				append_token(lexer, TOKEN_CURLY_R);
 				break;
 			case '(':
-				append_token(state, TOKEN_PAREN_L, curr);
+				append_token(lexer, TOKEN_PAREN_L);
 				break;
 			case ')':
-				append_token(state, TOKEN_PAREN_R, curr);
+				append_token(lexer, TOKEN_PAREN_R);
 				break;
 			case ' ':
 			case '\t':
@@ -114,67 +137,70 @@ dont_tell_johnny: while (curr < state->file_size) {
 			case 90:
 			case '-':
 				{
-					uint32_t add_index = curr;
-					for (; curr < state->file_size; curr++) {
-						if (0 == identifier_map[(uint8_t)state->file_str[curr]]) break;
+					uint32_t add_index = lexer->pos;
+					for (; !is_at_end(lexer); lexer->pos++) {
+						if (0 == identifier_map[(uint8_t)lexer->file[lexer->pos]]) break;
 					}
-					append_token(state, TOKEN_IDENTIFIER, add_index);
+					append_token_from(lexer, TOKEN_IDENTIFIER, add_index);
 					continue;
 				}
 				break;
 			case '"':
 				{
-					uint32_t add_index = curr;
-					curr++;
-					for (; curr < state->file_size; curr++) {
-						if (state->file_str[curr] == '"') {
-							curr++;
-							append_token(state, TOKEN_STRING, add_index);
-		
-							goto dont_tell_johnny;
+					uint32_t add_index = lexer->pos;
+					lexer->pos++;
+					for (; !is_at_end(lexer); lexer->pos++) {
+						if (curr(lexer) == '"') {
+							lexer->pos++;
+							append_token_from(lexer, TOKEN_STRING, add_index);
+							continue;
 						}
 					}
-					printErr(state, curr, "found no matching '\"'");
+					printErr(lexer_get_view(lexer), lexer->pos, "found no matching '\"'");
 					exit(1);
 				}
 				break;
 			// comments!
 			case '/':
 				// safe, file str always ends with 0!
-				if (state->file_str[curr+1] == '/') {
-					curr += 1;
-					for (; curr < state->file_size; curr++) {
-						if (state->file_str[curr] == '\n') break;
+				if (lexer->file[lexer->pos+1] == '/') {
+					lexer->pos += 1;
+					for (; lexer->pos < lexer->file_size; lexer->pos++) {
+						if (curr(lexer) == '\n') break;
 					}
 					continue;
 				} else {
 					goto failure;
 				}
 failure: default: {
-				printf("char %c\n", state->file_str[curr]);
-				printErr(state, curr, "illegal character");
+				printErr(lexer_get_view(lexer), lexer->pos, "illegal character");
 				exit(1);
 			};
 		}
-		curr += 1;
+		lexer->pos += 1;
 	}
-	append_token(state, TOKEN_EOF, curr);
+	append_token(lexer, TOKEN_EOF);
 }
 
-str_ref get_token_str(parse_state *state, token token) {
-	return get_token_id_str(state, token.index);
+str_ref lexer_token_str(Lexer *lexer, token token) {
+	return lexer_token_id_str(lexer, token.index);
 }
 
-str_ref get_token_id_str(parse_state *state, uint32_t token_index) {
-	uint32_t src = state->tokens[token_index].index;
-	uint32_t dst = state->tokens[token_index+1].index;
+str_ref lexer_token_id_str(Lexer *lexer, uint32_t token_index) {
+	if (token_index >= lexer->tokens.count) {
+		fprintf(stderr, "ERROR in 'lex.c': token_index out of bounds\n");
+		exit(1);
+	}
+
+	uint32_t src = ((token*)lexer->tokens.items)[token_index].index;
+	uint32_t dst = ((token*)lexer->tokens.items)[token_index+1].index;
 
 	int i; // new dst
 	for (i = src; i < dst; i++) {
 		// synchronize with tokenless characters!
-		if (state->file_str[i] == ' ') break;
-		if (state->file_str[i] == '\t') break;
-		if (state->file_str[i] == '\n') break;
+		if (lexer->file[i] == ' ') break;
+		if (lexer->file[i] == '\t') break;
+		if (lexer->file[i] == '\n') break;
 	}
 
 	return (str_ref){
@@ -183,16 +209,16 @@ str_ref get_token_id_str(parse_state *state, uint32_t token_index) {
 	};
 }
 
-uint32_t get_line_start(parse_state* state, uint32_t index) {
-	while (index != 0 && state->file_str[index - 1] != '\n') {
+uint32_t get_line_start(FileView file, uint32_t index) {
+	while (index != 0 && file.ptr[index - 1] != '\n') {
 		index--;
 	}
 	return index;
 }
 
 // Includes '\n'
-uint32_t get_line_end(parse_state* state, uint32_t index) {
-	while (index < state->file_size && state->file_str[index] != '\n') {
+uint32_t get_line_end(FileView file, uint32_t index) {
+	while (index < file.size && file.ptr[index] != '\n') {
 		index++;
 	}
 	return index;
@@ -210,20 +236,20 @@ void rep_print(char c, int n) {
 // Todo: buffer optimize the prints
 // Todo: maybe move to a different file so it can be included in main.c
 // TODO: check terminal width and only print the part that fits
-void printErr(parse_state* state, uint32_t index, char* message) {
-	uint32_t start = get_line_start(state, index);
-	uint32_t end = get_line_end(state, index);
+void printErr(FileView file, uint32_t index, char* message) {
+	uint32_t start = get_line_start(file, index);
+	uint32_t end = get_line_end(file, index);
 	uint32_t len = end - start;
 
 	fprintf(stderr, "%u:%u: \e[1;91merror:\e[0m %s\n", 0, index - start, message);
 	
 	uint32_t tab_count = 0;
 	for (int i = start; i < end; i++) {
-		if (state->file_str[i] == '\t') tab_count++;
+		if (file.ptr[i] == '\t') tab_count++;
 	}
 	
 	// Print line
-	printf(" %4d | %.*s\n", 0, len, state->file_str + start);
+	printf(" %4d | %.*s\n", 0, len, file.ptr + start);
 	
 	// Arrow
 	printf("      | ");

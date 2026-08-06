@@ -16,8 +16,29 @@
 
 #define NOT_FOUND 0xFFFFFFFF
 
+str_ref get_token_id_str(parse_state* state, uint32_t token_index) {
+	Lexer lexer = {
+		.file = state->file_str,
+		.file_size = state->file_size,
+		.tokens.items = (uint8_t*)state->tokens,
+		.tokens.count = state->token_count,
+	};
+	return lexer_token_id_str(&lexer, token_index);
+}
+
+str_ref get_token_str(parse_state* state, token token) {
+	return get_token_id_str(state, token.index);
+}
+
 token curr_token(parse_state* state) {
 	return state->tokens[state->curr];
+}
+
+FileView file_view(parse_state* state) {
+	return (FileView){
+		.ptr = state->file_str,
+		.size = state->file_size,
+	};
 }
 
 void parse_error(parse_state* state, char* fmt, ...) {
@@ -28,7 +49,7 @@ void parse_error(parse_state* state, char* fmt, ...) {
 	vsnprintf(str, 128, fmt, args);
 	va_end(args);
 
-	printErr(state, curr_token(state).index, str);
+	printErr(file_view(state), curr_token(state).index, str);
 }
 
 uint32_t find_next_char(char *str, uint32_t str_size, uint32_t from, char c) {
@@ -51,7 +72,7 @@ bool expect_token(parse_state* state, token_type token) {
 	if (curr_token(state).tag != token) { 
 		char* expected = token_tag_str(token);
 		char* got = token_tag_str(curr_token(state).tag);
-		parse_error(state, "Expected ‘%s’ , got ‘%s’", expected, got);
+		parse_error(state, "Expected '%s' , got '%s'", expected, got);
 		return false;
 	}
 	return true;
@@ -129,7 +150,6 @@ bool parse_node(parse_state *state) {
 	state->curr += 1;
 
 	// parse body
-
 	if (!expect_token(state, TOKEN_CURLY_L)) return false;
 	state->curr += 1;
 
@@ -166,7 +186,7 @@ bool exec_command(parse_state *state, command *c) {
 	char **argv = malloc(sizeof(char*)*(c->args.count+1));
 	argv[c->args.count] = NULL;
 
-	str_ref *refs = c->args.items;
+	str_ref *refs = (str_ref*)c->args.items;
 	for (uint32_t i = 0; i < c->args.count; i++) {
 		char *arg = malloc(refs[i].len+1);
 		memcpy(arg, &state->file_str[refs[i].src], refs[i].len);
@@ -190,11 +210,13 @@ bool exec_command(parse_state *state, command *c) {
 	return true;
 }
 
-int main(int argc, char **argv) {
-	int fd = open("Fakefile", 0);
+FileView read_file(const char *filename, size_t *out_size) {
+	int fd = open(filename, O_RDONLY);
 	if (fd == -1) {
-		printf("no Fakefile found\n");
-		exit(1);
+		return (FileView){
+			.ptr = NULL,
+			.size = 0
+		};
 	}
 
 	struct stat file_stat;
@@ -204,23 +226,46 @@ int main(int argc, char **argv) {
 	size_t allocation_size = file_stat.st_size+1; // not the same as file size!
 	char *file_str = mmap(NULL, allocation_size, PROT_READ, MAP_PRIVATE, fd, 0);
 
-	parse_state state = {0};
-	state.file_str = file_str;
-	state.file_size = file_stat.st_size;
+	if (out_size) {
+		*out_size = allocation_size;
+	}
 
-	arraylist_init(&state.unlinked_nodes, sizeof(unlinked_node*));
+	return (FileView){
+		.ptr = file_str,
+		.size = file_stat.st_size
+	};
+}
+
+int main(int argc, char **argv) {
+	size_t allocation_size = 0;
+	FileView file = read_file("Fakefile", &allocation_size);
+	if (file.ptr == NULL) {
+		printf("no Fakefile found\n");
+		return 1;
+	}
 
 	parse_args(argv);
-	lex(&state);
+
+	Lexer lexer = {0};
+	lexer.file = file.ptr;
+	lexer.file_size = file.size;
+	lex(&lexer);
+
+	parse_state state = {0};
+	state.file_str = file.ptr;
+	state.file_size = file.size;
+	state.tokens = (token*)lexer.tokens.items;
+	state.token_count = lexer.tokens.count;
+	arraylist_init(&state.unlinked_nodes, sizeof(unlinked_node*));
 	if (!parse_fakefile(&state)) {
 		fprintf(stderr, "Failed to parse fakefile\n");
 		return 1;
 	}
 
-	unlinked_node **nodes = state.unlinked_nodes.items;
+	unlinked_node **nodes = (unlinked_node**)state.unlinked_nodes.items;
 	for (uint32_t i = 0; i < state.unlinked_nodes.count; i++) {
 		unlinked_node *node = nodes[i];
-		command **commands = node->commands.items;
+		command **commands = (command**)node->commands.items;
 
 		printf("[Node] %.*s - %ld commands\n", node->name.len, state.file_str + node->name.src, node->commands.count);
 		
@@ -232,5 +277,5 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	munmap(file_str, allocation_size);
+	munmap(file.ptr, allocation_size);
 }

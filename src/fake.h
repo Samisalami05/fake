@@ -48,12 +48,19 @@ typedef struct {
 } token;
 
 typedef struct {
+	char* ptr;
+	size_t size;
+} FileView;
+
+typedef struct {
 	char* file;
 	size_t file_size;
 
 	arraylist tokens;
-	size_t curr;
+	size_t pos;
 } Lexer;
+
+FileView lexer_get_view(Lexer* lexer);
 
 typedef struct  {
 	char *file_str;
@@ -61,14 +68,13 @@ typedef struct  {
 
 	token *tokens;
 	uint32_t token_count;
-	uint32_t token_allocated;
 
 	arraylist unlinked_nodes;
 	uint32_t curr; // Current token
 } parse_state;
 
-void lex(parse_state *state);
-str_ref get_token_str(parse_state *state, token token);
-str_ref get_token_id_str(parse_state *state, uint32_t token_index);
+void lex(Lexer* lexer);
+str_ref lexer_token_str(Lexer* lexer, token token);
+str_ref lexer_token_id_str(Lexer* lexer, uint32_t token_index);
 
-void printErr(parse_state* state, uint32_t curr, char* message);
+void printErr(FileView file, uint32_t curr, char* message);
