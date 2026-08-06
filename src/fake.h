@@ -11,6 +11,14 @@ typedef struct {
 } str_ref;
 
 typedef struct {
+char* str;
+size_t allocated;
+size_t count;
+} StrBuilder;
+
+void sb_append(StrBuilder* sb, const char* str);
+
+typedef struct {
 	arraylist args; // str_ref
 } command;
 
