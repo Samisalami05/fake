@@ -51,9 +51,48 @@ bool expect_token(parse_state* state, token_type token) {
 	if (curr_token(state).tag != token) { 
 		char* expected = token_tag_str(token);
 		char* got = token_tag_str(curr_token(state).tag);
-		parse_error(state, "Expected '%s', got '%s'", expected, got);
+		parse_error(state, "Expected ‘%s’ , got ‘%s’", expected, got);
 		return false;
 	}
+	return true;
+}
+
+bool parse_string(parse_state* state, str_ref* out) {
+	if (!expect_token(state, TOKEN_STRING)) return false;
+
+	str_ref ref = get_token_id_str(state, state->curr);
+	ref.src += 1;
+	ref.len -= 2;
+	*out = ref;
+
+	state->curr += 1;
+	return true;
+}
+
+bool parse_command(parse_state* state, command* cmd) {
+	arraylist_init(&cmd->args, sizeof(str_ref));
+
+	int len = 0;
+	while (1) {
+		str_ref str = {0};
+		token_type type = curr_token(state).tag;
+		if (type == TOKEN_STRING) {
+			if (!parse_string(state, &str)) return false;
+		}
+		else if (type == TOKEN_IDENTIFIER) {
+			str = get_token_id_str(state, state->curr);
+			state->curr++;
+		}
+		else break;
+		arraylist_append(&cmd->args, &str);
+		len++;
+	}
+
+	if (len == 0) {
+		parse_error(state, "empty command, command cannot be empty");
+		return false;
+	}
+
 	return true;
 }
 
@@ -62,63 +101,52 @@ bool parse_node(parse_state *state) {
 	arraylist_init(&node->commands, sizeof(command*));
 	arraylist_init(&node->dependencies, sizeof(str_ref));
 
-	if (!expect_token(state, token_identifier)) return false;
+	if (!expect_token(state, TOKEN_IDENTIFIER)) return false;
 	node->name = get_token_id_str(state, state->curr);
 
 	state->curr += 1;
-	if (!expect_token(state, token_colon)) return false;
+	if (!expect_token(state, TOKEN_COLON)) return false;
 	state->curr += 1;
 
 	// parse deps
-	if (!expect_token(state, token_paren_l)) return false;
+	if (!expect_token(state, TOKEN_PAREN_L)) return false;
 	state->curr += 1;
 	while (1) {
 		token_type first_tag = state->tokens[state->curr].tag;
-		if (first_tag == token_paren_r) break;
+		if (first_tag == TOKEN_PAREN_R) break;
 
-		if (!expect_token(state, token_identifier)) return false;
+		if (!expect_token(state, TOKEN_IDENTIFIER)) return false;
 		str_ref dep = get_token_id_str(state, state->curr);
 		state->curr += 1;
 		
 		arraylist_append(&node->dependencies, &dep);
 
-		if (curr_token(state).tag == token_paren_r) break;
-		if (!expect_token(state, token_comma)) return false;
+		if (curr_token(state).tag == TOKEN_PAREN_R) break;
+		if (!expect_token(state, TOKEN_COMMA)) return false;
 		state->curr += 1;
 	}
-	if (!expect_token(state, token_paren_r)) return false;
+	if (!expect_token(state, TOKEN_PAREN_R)) return false;
 	state->curr += 1;
 
 	// parse body
 
-	if (!expect_token(state, token_curly_l)) return false;
+	if (!expect_token(state, TOKEN_CURLY_L)) return false;
 	state->curr += 1;
 
 	// parse commands
 	while (1) {
-		token_type first_tag = state->tokens[state->curr].tag;
-		if (first_tag == token_curly_r) break;
-		
+		if (curr_token(state).tag == TOKEN_CURLY_R) break;
+
 		command *c = malloc(sizeof(command));
-		arraylist_init(&c->args, sizeof(str_ref));
-
-		while (1) {
-			if (curr_token(state).tag != token_string) break;
-			str_ref ref = get_token_id_str(state, state->curr);
-			ref.src += 1;
-			ref.len -= 2;
-			
-			state->curr += 1;
-			
-			arraylist_append(&c->args, &ref);
-		}
-		if (!expect_token(state, token_comma)) return false;
-		state->curr += 1;
-
+		if (!parse_command(state, c)) return false;
 		arraylist_append(&node->commands, &c);
+		
+		if (curr_token(state).tag == TOKEN_CURLY_R) break;
+		if (!expect_token(state, TOKEN_COMMA)) return false;
+		state->curr += 1;
 	}
 	
-	if (!expect_token(state, token_curly_r)) return false;
+	if (!expect_token(state, TOKEN_CURLY_R)) return false;
 	state->curr += 1;
 
 	arraylist_append(&state->unlinked_nodes, &node);
@@ -128,7 +156,7 @@ bool parse_node(parse_state *state) {
 
 bool parse_fakefile(parse_state *state) {
 	while (1) {
-		if (curr_token(state).tag == token_eof) break;
+		if (curr_token(state).tag == TOKEN_EOF) break;
 		if (!parse_node(state)) return false;
 	}
 	return true;
@@ -138,7 +166,7 @@ bool exec_command(parse_state *state, command *c) {
 	char **argv = malloc(sizeof(char*)*(c->args.count+1));
 	argv[c->args.count] = NULL;
 
-	str_ref *refs = c->args.ptr;
+	str_ref *refs = c->args.items;
 	for (uint32_t i = 0; i < c->args.count; i++) {
 		char *arg = malloc(refs[i].len+1);
 		memcpy(arg, &state->file_str[refs[i].src], refs[i].len);
@@ -168,6 +196,7 @@ int main(int argc, char **argv) {
 		printf("no Fakefile found\n");
 		exit(1);
 	}
+
 	struct stat file_stat;
 	fstat(fd, &file_stat);
 
@@ -188,12 +217,12 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	unlinked_node **nodes = state.unlinked_nodes.ptr;
+	unlinked_node **nodes = state.unlinked_nodes.items;
 	for (uint32_t i = 0; i < state.unlinked_nodes.count; i++) {
 		unlinked_node *node = nodes[i];
-		command **commands = node->commands.ptr;
+		command **commands = node->commands.items;
 
-		printf("[Node] %.*s - %d commands\n", node->name.len, state.file_str + node->name.src, node->commands.count);
+		printf("[Node] %.*s - %ld commands\n", node->name.len, state.file_str + node->name.src, node->commands.count);
 		
 		for (uint32_t j = 0; j < node->commands.count; j++) {
 			if (!exec_command(&state, commands[j])) {

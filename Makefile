@@ -9,7 +9,7 @@ $(NAME): $(OBJS)
 
 build/%.o: src/%.c
 	@mkdir -p build
-	$(CC) -Wall -c $< -o $@
+	$(CC) -Wall -ggdb -c $< -o $@
 
 .PHONY: run clean install uninstall
 

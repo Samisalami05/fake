@@ -3,30 +3,35 @@
 #include <stdlib.h>
 #include <string.h>
 
-void arraylist_init(arraylist *list, uint32_t elem_c)
-{
-	list->ptr = NULL;
+void arraylist_init(arraylist* list, size_t item_size) {
+	list->items = NULL;
+	list->capacity = 0;
 	list->count = 0;
-	list->allocated = 0;
-	list->size_per_elem = elem_c;
+	list->item_size = item_size;
 }
 
-void resize(arraylist *list, uint32_t target) {
-	list->allocated = target;
-	list->ptr = realloc(list->ptr, list->allocated*list->size_per_elem);
+void resize(arraylist* list, size_t target) {
+	size_t old = list->capacity;
+	while (target > list->capacity) {
+		list->capacity = list->capacity == 0 ? 4 : list->capacity * 2;
+	}
+
+	if (old == list->capacity) return;
+	list->items = realloc(list->items, list->capacity*list->item_size);
 }
 
-void arraylist_append(arraylist *list, void *elem)
-{
+void arraylist_append(arraylist* list, void *elem) {
 	resize(list, list->count+1);
-	uint8_t *ptr = list->ptr;
-	memcpy(&ptr[list->count*list->size_per_elem], elem, list->size_per_elem);
+	memcpy(list->items + list->count*list->item_size, elem, list->item_size);
 	list->count++;
 }
 
-// Todo: Use pointers to arraylist instead of &arraylist to eliminate valgrind error here.
-void arraylist_deinit(arraylist *list) {
-	if (list->allocated > 0) {
-		free(list->ptr);
-	}
+void arraylist_deinit(arraylist* list) {
+	free(list->items);
+	list->capacity = 0;
+	list->count = 0;
+}
+
+void arraylist_clear(arraylist* list) {
+	list->count = 0;
 }

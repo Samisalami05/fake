@@ -21,15 +21,15 @@ typedef struct {
 } unlinked_node;
 
 typedef enum {
-	token_identifier = 0,
-	token_colon,
-	token_string,
-	token_eof,
-	token_curly_l,
-	token_curly_r,
-	token_comma,
-	token_paren_l,
-	token_paren_r,
+	TOKEN_IDENTIFIER = 0,
+	TOKEN_COLON,
+	TOKEN_STRING,
+	TOKEN_EOF,
+	TOKEN_CURLY_L,
+	TOKEN_CURLY_R,
+	TOKEN_COMMA,
+	TOKEN_PAREN_L,
+	TOKEN_PAREN_R,
 } token_type;
 
 char* token_tag_str(token_type tag);
@@ -38,6 +38,14 @@ typedef struct {
 	token_type tag;
 	uint32_t index;
 } token;
+
+typedef struct {
+	char* file;
+	size_t file_size;
+
+	arraylist tokens;
+	size_t curr;
+} Lexer;
 
 typedef struct  {
 	char *file_str;

@@ -1,15 +1,17 @@
 #pragma once
 
+#include <stddef.h>
 #include <stdint.h>
 
 typedef struct {
-	void *ptr;
-	uint32_t count;
-	uint32_t allocated;
+	uint8_t* items;
+	size_t count;
+	size_t capacity;
 
-	uint32_t size_per_elem;
+	size_t item_size;
 } arraylist;
 
-void arraylist_init(arraylist *list, uint32_t elem_c);
-void arraylist_append(arraylist *list, void *elem);
-void arraylist_deinit(arraylist *list);
+void arraylist_init(arraylist* list, size_t elem_size);
+void arraylist_append(arraylist* list, void* elem);
+void arraylist_deinit(arraylist* list);
+void arraylist_clear(arraylist* list);

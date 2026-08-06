@@ -5,6 +5,19 @@
 #include <stdio.h>
 #include <string.h>
 
+static void append_token(parse_state* state, token_type type, uint32_t index) {
+	state->tokens[state->token_count++] = (token){
+		.tag = type,
+		.index = index,
+	};
+}
+
+// Takes the current character and makes it into token and increments curr
+static void lex_single(parse_state* state, token_type type) {
+	append_token(state, type, state->curr); // state->curr IS THE WRONG CURR!!!!
+	state->curr++;
+}
+
 void lex(parse_state *state) {
 	uint8_t identifier_map[256] = {0};
 	for (uint32_t i = 0; i < 256; i++) {
@@ -12,6 +25,9 @@ void lex(parse_state *state) {
 		if (i >= 'A' && i <= 'Z') identifier_map[i] = 1;
 		if (i >= '0' && i <= '9') identifier_map[i] = 1;
 		if (i == '_') identifier_map[i] = 1;
+		if (i == '/') identifier_map[i] = 1;
+		if (i == '.') identifier_map[i] = 1;
+		if (i == '-') identifier_map[i] = 1;
 	}
 
 	state->token_allocated = 65536;
@@ -21,60 +37,27 @@ void lex(parse_state *state) {
 dont_tell_johnny: while (curr < state->file_size) {
 		switch (state->file_str[curr]) {
 			case ':':
-				state->tokens[state->token_count++] = (token){
-					.tag = token_colon,
-					.index = curr,
-				};
+				append_token(state, TOKEN_COLON, curr);
 				break;
 			case ',':
-				state->tokens[state->token_count++] = (token){
-					.tag = token_comma,
-					.index = curr,
-				};
+				append_token(state, TOKEN_COMMA, curr);
 				break;
 			case '{':
-				state->tokens[state->token_count++] = (token){
-					.tag = token_curly_l,
-					.index = curr,
-				};
+				append_token(state, TOKEN_CURLY_L, curr);
 				break;
 			case '}':
-				state->tokens[state->token_count++] = (token){
-					.tag = token_curly_r,
-					.index = curr,
-				};
+				append_token(state, TOKEN_CURLY_R, curr);
 				break;
 			case '(':
-				state->tokens[state->token_count++] = (token){
-					.tag = token_paren_l,
-					.index = curr,
-				};
+				append_token(state, TOKEN_PAREN_L, curr);
 				break;
 			case ')':
-				state->tokens[state->token_count++] = (token){
-					.tag = token_paren_r,
-					.index = curr,
-				};
+				append_token(state, TOKEN_PAREN_R, curr);
 				break;
 			case ' ':
 			case '\t':
 			case '\n':
 				break;
-			case '0':
-			case '1':
-			case '2':
-			case '3':
-			case '4':
-			case '5':
-			case '6':
-			case '7':
-			case '8':
-			case '9':
-				{
-					//printf("breaking bad (this code)\n");
-					printErr(state, curr, "breaking bad (this code)"); // Maybe should not be printErr
-					exit(1);
-				}
 			// small letters
 			case 97:
 			case 98:
@@ -129,15 +112,13 @@ dont_tell_johnny: while (curr < state->file_size) {
 			case 88:
 			case 89:
 			case 90:
+			case '-':
 				{
 					uint32_t add_index = curr;
 					for (; curr < state->file_size; curr++) {
 						if (0 == identifier_map[(uint8_t)state->file_str[curr]]) break;
 					}
-					state->tokens[state->token_count++] = (token){
-						.tag = token_identifier,
-						.index = add_index,
-					};
+					append_token(state, TOKEN_IDENTIFIER, add_index);
 					continue;
 				}
 				break;
@@ -148,10 +129,8 @@ dont_tell_johnny: while (curr < state->file_size) {
 					for (; curr < state->file_size; curr++) {
 						if (state->file_str[curr] == '"') {
 							curr++;
-							state->tokens[state->token_count++] = (token){
-								.tag = token_string,
-								.index = add_index,
-							};
+							append_token(state, TOKEN_STRING, add_index);
+		
 							goto dont_tell_johnny;
 						}
 					}
@@ -172,16 +151,14 @@ dont_tell_johnny: while (curr < state->file_size) {
 					goto failure;
 				}
 failure: default: {
-						 printErr(state, curr, "illegal character");
-						 exit(1);
-					 };
+				printf("char %c\n", state->file_str[curr]);
+				printErr(state, curr, "illegal character");
+				exit(1);
+			};
 		}
 		curr += 1;
 	}
-	state->tokens[state->token_count++] = (token){
-		.tag = token_eof,
-		.index = curr,
-	};
+	append_token(state, TOKEN_EOF, curr);
 }
 
 str_ref get_token_str(parse_state *state, token token) {
@@ -232,6 +209,7 @@ void rep_print(char c, int n) {
 // Todo: fix problem with line start/end when colon is not in second command
 // Todo: buffer optimize the prints
 // Todo: maybe move to a different file so it can be included in main.c
+// TODO: check terminal width and only print the part that fits
 void printErr(parse_state* state, uint32_t index, char* message) {
 	uint32_t start = get_line_start(state, index);
 	uint32_t end = get_line_end(state, index);
