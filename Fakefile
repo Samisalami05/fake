@@ -1,0 +1,5 @@
+// we got comments now!
+main: (dependency, ) {
+	"gcc" "-Wall" "src/main.c" "src/lex.c" "src/arraylist.c" "src/parse_args.c" "src/token.c" "-o" "fake",
+	"echo" "plswork", // comment!
+}

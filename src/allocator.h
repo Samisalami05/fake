@@ -1,8 +1,9 @@
 #pragma once
 
+#include <stddef.h>
 #include <stdint.h>
 
-#include "src/arraylist.h"
+#include "arraylist.h"
 
 typedef struct {
 	arraylist data;

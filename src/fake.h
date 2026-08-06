@@ -22,15 +22,17 @@ typedef struct {
 
 typedef enum {
 	token_identifier = 0,
-	token_colon = 1,
-	token_string = 2,
-	token_eof = 3,
-	token_curly_l = 4,
-	token_curly_r = 5,
-	token_comma = 7,
+	token_colon,
+	token_string,
+	token_eof,
+	token_curly_l,
+	token_curly_r,
+	token_comma,
 	token_paren_l,
 	token_paren_r,
 } token_type;
+
+char* token_tag_str(token_type tag);
 
 typedef struct {
 	token_type tag;
@@ -46,7 +48,11 @@ typedef struct  {
 	uint32_t token_allocated;
 
 	arraylist unlinked_nodes;
+	uint32_t curr; // Current token
 } parse_state;
 
 void lex(parse_state *state);
-str_ref get_token_str(parse_state *state, uint32_t token_index);
+str_ref get_token_str(parse_state *state, token token);
+str_ref get_token_id_str(parse_state *state, uint32_t token_index);
+
+void printErr(parse_state* state, uint32_t curr, char* message);

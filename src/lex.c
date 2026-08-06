@@ -1,10 +1,9 @@
 #include "fake.h"
 
+#include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
-
-
-void printErr(parse_state* state, uint32_t curr, char* message);
+#include <string.h>
 
 void lex(parse_state *state) {
 	uint8_t identifier_map[256] = {0};
@@ -185,7 +184,11 @@ failure: default: {
 	};
 }
 
-str_ref get_token_str(parse_state *state, uint32_t token_index) {
+str_ref get_token_str(parse_state *state, token token) {
+	return get_token_id_str(state, token.index);
+}
+
+str_ref get_token_id_str(parse_state *state, uint32_t token_index) {
 	uint32_t src = state->tokens[token_index].index;
 	uint32_t dst = state->tokens[token_index+1].index;
 
@@ -203,54 +206,50 @@ str_ref get_token_str(parse_state *state, uint32_t token_index) {
 	};
 }
 
-uint32_t getLineStart(parse_state* state, uint32_t curr) {
-	uint32_t loc = curr;
-	while (loc != 0 && state->file_str[loc - 1] != '\n') {
-		loc--;
+uint32_t get_line_start(parse_state* state, uint32_t index) {
+	while (index != 0 && state->file_str[index - 1] != '\n') {
+		index--;
 	}
-	return loc;
+	return index;
 }
 
 // Includes '\n'
-uint32_t getLineEnd(parse_state* state, uint32_t curr) {
-	uint32_t loc = curr;
-	while (loc < state->file_size && state->file_str[loc] != '\n') {
-		loc++;
+uint32_t get_line_end(parse_state* state, uint32_t index) {
+	while (index < state->file_size && state->file_str[index] != '\n') {
+		index++;
 	}
-	return loc;
+	return index;
+}
+
+// Prints char n times
+void rep_print(char c, int n) {
+	if (n <= 0) return;
+	char buf[n];
+	memset(buf, c, n);
+	printf("%.*s", n, buf);
 }
 
 // Todo: fix problem with line start/end when colon is not in second command
 // Todo: buffer optimize the prints
 // Todo: maybe move to a different file so it can be included in main.c
-void printErr(parse_state* state, uint32_t curr, char* message) {
-	uint32_t lineStart = getLineStart(state, curr);
-	uint32_t lineEnd = getLineEnd(state, curr);
+void printErr(parse_state* state, uint32_t index, char* message) {
+	uint32_t start = get_line_start(state, index);
+	uint32_t end = get_line_end(state, index);
+	uint32_t len = end - start;
 
-	uint32_t tabCount = 0;
+	fprintf(stderr, "%u:%u: \e[1;91merror:\e[0m %s\n", 0, index - start, message);
 	
-	//printf("char: %c, start: %u, end: %u\n", state->file_str[curr], lineStart, lineEnd);
-
-	fprintf(stderr, "%u: \033[1;31merror:\033[0m %s\n", curr, message);
+	uint32_t tab_count = 0;
+	for (int i = start; i < end; i++) {
+		if (state->file_str[i] == '\t') tab_count++;
+	}
 	
 	// Print line
-	for (int i = lineStart; i < lineEnd; i++) {
-		char c = state->file_str[i];
-		if (c == '\t') tabCount++;
-		printf("%c", c);
-	}
+	printf(" %4d | %.*s\n", 0, len, state->file_str + start);
 	
-	printf("\n");
-	
-	// Print empty space for arrow
-	for (int i = 0; i < tabCount; i++) {
-		printf("\t");
-	}
-	for (int i = lineStart + tabCount; i < curr; i++) {
-		printf(" ");
-	}
-
-	printf("\033[1;31m^\033[0m"); // Print red arrow
-
-	printf("\n");
+	// Arrow
+	printf("      | ");
+	rep_print('\t', tab_count);
+	rep_print(' ', index - start - tab_count);
+	printf("\e[1;91m^\e[0m\n"); // Print red arrow
 }

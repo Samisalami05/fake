@@ -5,6 +5,7 @@
 arena* arena_init() {
 	arena* a = malloc(sizeof(arena));
 	arraylist_init(&a->data, 8);
+	return a;
 }
 
 void* arena_alloc(arena* a, size_t size) {

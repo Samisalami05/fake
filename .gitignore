@@ -1,4 +1,2 @@
 fake
-
-# Test for arena allocator
-arenatest
+build/

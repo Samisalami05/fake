@@ -1,28 +1,38 @@
 # Fake Build System - Fake BS
-The Fake Build System, Fake BS, is a build system for building small c projects.
+The Fake Build System, Fake BS, is a build system for building small c
+projects.
 
 # Building
-To build fake without access to fake, you can use the build_manual.sh file:
+Fake can be built both using an existing build of fake or using the
+included Makefile.
 ```bash
-./build_manual.sh
+# Using fake
+fake
+
+# Using make
+make
 ```
-  
+
 If you want to install fake to a system path, you execute:
 ```bash
-./install.sh
+make install
 ```
 
 # Usage
-The Fake program builds a project in the current directory according to a fakefile.
+The Fake program builds a project in the current directory according to a
+Fakefile. \
 To get more information, run:
 ```
 fake --help
 ```
-To know how fakefile works, check out examples in this codebase.
+To know how Fakefile works, check out examples in this codebase.
 
 # LSP support
-To get lsps to care about your fake configuration, use the [bear](https://github.com/rizsotto/Bear) project like below for a fakefile configured working directory:
+To get lsps to care about your fake configuration, use the 
+[bear](https://github.com/rizsotto/Bear) project like below for a 
+fakefile configured working directory:
 ```
 bear -- fake
 ```
-That will make a compile_commands.json file that most lsps automatically detect and use.
+That will make a compile_commands.json file that most lsps automatically
+detect and use.
