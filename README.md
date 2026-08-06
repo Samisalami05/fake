@@ -17,7 +17,7 @@ If you want to install fake to your system, execute:
 ```bash
 make install
 ```
-This will install fake inyo ~/.local/bin
+**NOTE:** This will install fake into ~/.local/bin
 
 # Usage
 The Fake program builds a project in the current directory according to a
