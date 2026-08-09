@@ -1,9 +1,15 @@
-// TODO: variables
 // TODO: make dependencies work
-// TODO: inbuilt functions, for example replace(var, pattern, new)
 // TODO: add identifier path parsing, for example path/to/*.c or path/to/**.h
+// TODO: variables
+// TODO: env variables
+// TODO: inbuilt functions, for example replace(var, pattern, new)
+// TODO: maybe recursive Fakefiles???
+// TODO: maybe preprocessor on env variables (#if)
 
-main: (dependency) {
-	gcc -Wall src/main.c src/lex.c src/arraylist.c src/parse_args.c src/token.c -o fake,
-	echo plswork,
+test {
+	gcc -Wall test.c -o test
+}
+
+run: test {
+	./test
 }

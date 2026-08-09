@@ -3,6 +3,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+arraylist arraylist_new(size_t item_size) {
+	arraylist list = {0};
+	arraylist_init(&list, item_size);
+	return list;
+}
+
 void arraylist_init(arraylist* list, size_t item_size) {
 	list->items = NULL;
 	list->capacity = 0;
@@ -20,9 +26,9 @@ void resize(arraylist* list, size_t target) {
 	list->items = realloc(list->items, list->capacity*list->item_size);
 }
 
-void arraylist_append(arraylist* list, void *elem) {
+void arraylist_append(arraylist* list, void *item) {
 	resize(list, list->count+1);
-	memcpy(list->items + list->count*list->item_size, elem, list->item_size);
+	memcpy(list->items + list->count*list->item_size, item, list->item_size);
 	list->count++;
 }
 

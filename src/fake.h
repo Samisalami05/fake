@@ -10,23 +10,14 @@ typedef struct {
 	uint32_t len;
 } str_ref;
 
+// TODO: use this
 typedef struct {
-char* str;
-size_t allocated;
-size_t count;
+	char* str;
+	size_t capacity;
+	size_t count;
 } StrBuilder;
 
 void sb_append(StrBuilder* sb, const char* str);
-
-typedef struct {
-	arraylist args; // str_ref
-} command;
-
-typedef struct {
-	str_ref name;
-	arraylist commands; // of str_ref
-	arraylist dependencies; // of str_ref
-} unlinked_node;
 
 typedef enum {
 	TOKEN_IDENTIFIER = 0,
@@ -60,21 +51,18 @@ typedef struct {
 	size_t pos;
 } Lexer;
 
+Lexer lexer_from_file(FileView file);
 FileView lexer_get_view(Lexer* lexer);
 
-typedef struct  {
-	char *file_str;
-	uint32_t file_size;
+typedef struct {
+	token* ptr;
+	size_t count;
+} Tokens;
 
-	token *tokens;
-	uint32_t token_count;
-
-	arraylist unlinked_nodes;
-	uint32_t curr; // Current token
-} parse_state;
+Tokens lexer_tokens(Lexer* lexer);
 
 void lex(Lexer* lexer);
 str_ref lexer_token_str(Lexer* lexer, token token);
 str_ref lexer_token_id_str(Lexer* lexer, uint32_t token_index);
 
-void printErr(FileView file, uint32_t curr, char* message);
+void printErr(FileView file, str_ref ref, char* message);
