@@ -2,28 +2,29 @@
 
 #include "arraylist.h"
 #include "fake.h"
+#include "lex.h"
 #include <stdbool.h>
 
 typedef struct {
 	arraylist args; // of allocated char*
-} command;
+} Command;
 
 typedef struct {
 	char* name;
-	arraylist commands; // of command
+	arraylist commands; // of Command
 	arraylist dependencies; // of allocated char*
 } Label;
 
 typedef struct  {
-	char *file_str;
+	char *file_ptr;
 	size_t file_size;
 
 	Tokens tokens;
 
-	arraylist labels;
+	arraylist labels; // of Label
 	size_t curr; // Current token
-} parse_state;
+} ParseState;
 
 // TODO: build parse tree for lsp
 
-bool parse_fakefile(parse_state *state);
+bool parse_fakefile(ParseState *state);
