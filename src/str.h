@@ -11,6 +11,7 @@ typedef struct {
 } StrRef;
 
 char* str_cstr(const char* src, StrRef str);
+int str_contains(const char* src, StrRef str, char c);
 
 // TODO: use this
 typedef struct {

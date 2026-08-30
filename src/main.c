@@ -14,6 +14,7 @@
 #include "arraylist.h"
 #include "fake.h"
 #include "file.h"
+#include "log.h"
 #include "parse_args.h"
 #include "parse.h"
 
@@ -55,7 +56,7 @@ ParseState state_init(FileView file, Tokens tokens) {
 int main(int argc, char **argv) {
 	FileView file = {0};
 	if (!read_file("Fakefile", &file)) {
-		fprintf(stderr, "no Fakefile found\n");
+		log_warning("no 'Fakefile' found");
 		return 1;
 	}
 
@@ -67,7 +68,7 @@ int main(int argc, char **argv) {
 
 	ParseState state = state_init(file, tokens);
 	if (!parse_fakefile(&state)) {
-		fprintf(stderr, "Failed to parse fakefile\n");
+		log_error("Failed to parse Fakefile\n");
 		return 1;
 	}
 

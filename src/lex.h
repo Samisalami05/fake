@@ -17,6 +17,7 @@ typedef enum {
 	TOKEN_COMMA,
 	TOKEN_PAREN_L,
 	TOKEN_PAREN_R,
+	TOKEN_EQUALS,
 } TokenType;
 
 char* token_tag_str(TokenType tag);

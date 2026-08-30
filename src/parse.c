@@ -2,6 +2,7 @@
 #include "fake.h"
 #include "arraylist.h"
 #include "lex.h"
+#include "log.h"
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -40,15 +41,15 @@ FileView file_view(ParseState* state) {
 }
 
 void parse_error(ParseState* state, char* fmt, ...) {
-	char str[128];
+	char msg[128];
 
 	va_list args;
 	va_start(args, fmt);
-	vsnprintf(str, 128, fmt, args);
+	vsnprintf(msg, 128, fmt, args);
 	va_end(args);
 
 	StrRef ref = get_token_id_str(state, state->curr);
-	printErr(file_view(state), ref, str);
+	log_file(LOG_ERROR, file_view(state), ref, msg);
 }
 
 bool expect_token(ParseState* state, TokenType token) {
@@ -172,5 +173,3 @@ bool parse_fakefile(ParseState *state) {
 	}
 	return true;
 }
-
-

@@ -1,4 +1,5 @@
 #include "file.h"
+#include "log.h"
 #include "str.h"
 #include <fcntl.h>
 #include <stdint.h>
@@ -9,19 +10,19 @@
 
 bool read_file(const char* path, FileView* out) {
 	if (!out) {
-		fprintf(stderr, "read_file(): Could not read file %s: 'FileView* out' param is NULL\n", path);
+		log_error("read_file(): Could not read file %s: 'FileView* out' param is NULL\n", path);
 		return false;
 	}
 
 	int fd = open(path, O_RDONLY);
 	if (fd == -1) {
-		perror("read_file(): open");
+		log_perror("read_file() - open: Could not open '%s'", path);
 		return false;
 	}
 
 	struct stat st;
 	if (fstat(fd, &st) == -1) {
-		perror("fstat");
+		log_perror("read_file() - fstat: Could not stat '%s'", path);
 		close(fd);
 		return false;
 	}
@@ -37,7 +38,7 @@ bool read_file(const char* path, FileView* out) {
 	out->size = (size_t)st.st_size;
 	out->ptr = mmap(NULL, out->size, PROT_READ, MAP_PRIVATE, fd, 0);
 	if (out->ptr == MAP_FAILED) {
-		perror("read_file(): mmap");
+		log_perror("read_file() - mmap");
 		close(fd);
 		return false;
 	}
@@ -50,6 +51,16 @@ void close_file(FileView file) {
 	munmap(file.ptr, file.size);
 }
 
+uint64_t file_line_num(FileView file, uint64_t index) {
+	uint64_t num = 0;
+	while (index > 0) {
+		if (file.ptr[index] == '\n')
+			num++;
+		index--;
+	}
+	return num + 1;
+}
+
 uint64_t file_line_start(FileView file, uint64_t index) {
 	while (index != 0 && file.ptr[index - 1] != '\n') {
 		index--;
@@ -57,7 +68,6 @@ uint64_t file_line_start(FileView file, uint64_t index) {
 	return index;
 }
 
-// Includes '\n'
 uint64_t file_line_end(FileView file, uint64_t index) {
 	while (index < file.size && file.ptr[index] != '\n') {
 		index++;
@@ -65,10 +75,16 @@ uint64_t file_line_end(FileView file, uint64_t index) {
 	return index;
 }
 
-StrRef file_line(FileView file, uint64_t index) {
+FileLine file_line(FileView file, uint64_t index) {
 	uint64_t start = file_line_start(file, index);
 	uint64_t end = file_line_end(file, index);
 
-	StrRef line = { start, end - start };
+	FileLine line = {
+		.num = file_line_num(file, index),
+		.str = (StrRef){
+			.src = start,
+			.len = end - start + 1
+		}
+	};
 	return line;
 }

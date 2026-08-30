@@ -115,6 +115,7 @@ void lex(Lexer* lexer) {
 			case '}': lex_single(lexer, TOKEN_CURLY_R); break;
 			case '(': lex_single(lexer, TOKEN_PAREN_L); break;
 			case ')': lex_single(lexer, TOKEN_PAREN_R); break;
+			case '=': lex_single(lexer, TOKEN_EQUALS); break;
 
 			case '"': lex_string(lexer); break;
 			

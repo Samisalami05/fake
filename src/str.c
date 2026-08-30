@@ -9,3 +9,11 @@ char* str_cstr(const char* src, StrRef str) {
 	cstr[str.len] = '\0';
 	return cstr;
 }
+
+int str_contains(const char* src, StrRef str, char c) {
+	int count = 0;
+	for (int i = 0; i < str.len; i++) {
+		if (src[str.src + i] == c) count++;
+	}
+	return count;
+}
