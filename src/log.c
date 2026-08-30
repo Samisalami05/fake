@@ -19,7 +19,7 @@ LogLevel get_log_level() {
 
 char* log_type_style(LogType type) {
 	switch (type) {
-		case LOG_INFO: return "\e[33m";
+		case LOG_INFO: return "\e[34m";
 		case LOG_WARN: return "\e[33m";
 		case LOG_ERROR: return "\e[31m";
 	}

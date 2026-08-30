@@ -160,7 +160,7 @@ StrRef lexer_token_str(Lexer *lexer, Token token) {
 
 StrRef lexer_token_id_str(Lexer *lexer, uint32_t token_index) {
 	if (token_index >= lexer->tokens.count) {
-		fprintf(stderr, "ERROR in 'lex.c': token_index out of bounds\n");
+		fprintf(stderr, "ERROR in 'lex.c': token_index %u out of bounds\n", token_index);
 		exit(1);
 	}
 

@@ -25,7 +25,7 @@
 // @pathsub(main.c camera.c, ".o"
 // @substr()
 
-TEST = wow,
+TEST = wow wowe,
 
 test {
 	gcc -Wall test.c -o test

@@ -163,13 +163,56 @@ bool parse_node(ParseState *state) {
 
 	arraylist_append(&state->labels, &node);
 
-	return state->curr;
+	return true;
+}
+
+bool parse_variable(ParseState* state) {
+	if (!expect_token(state, TOKEN_IDENTIFIER)) return false;
+	char* name = get_token_id_cstr(state, state->curr);
+	state->curr++;
+
+	log_info("variable %s", name);
+
+	if (!expect_token(state, TOKEN_EQUALS)) return false;
+	state->curr++;
+
+	while (curr_token(state).tag != TOKEN_COMMA) {
+		if (!expect_token(state, TOKEN_IDENTIFIER)) return false;
+		char* value = get_token_id_cstr(state, state->curr);
+		log_info("    value %s", value);
+
+		state->curr++;
+	}
+
+	if (!expect_token(state, TOKEN_COMMA)) return false;
+	state->curr++;
+
+	return true;
+}
+
+bool parse_statement(ParseState* state) {
+	if (!expect_token(state, TOKEN_IDENTIFIER)) return false;
+	state->curr++;
+
+	TokenType type = curr_token(state).tag;
+	state->curr--;
+
+	switch (type) {
+		case TOKEN_CURLY_L:
+		case TOKEN_COLON: return parse_node(state);
+		case TOKEN_EQUALS: return parse_variable(state);
+		default:
+			state->curr++;
+			parse_error(state, "Expected ':', '{' or '=', got '%s'", token_tag_str(type));
+			return false;
+	}
+	return true;
 }
 
 bool parse_fakefile(ParseState *state) {
 	while (1) {
 		if (curr_token(state).tag == TOKEN_EOF) break;
-		if (!parse_node(state)) return false;
+		if (!parse_statement(state)) return false;
 	}
 	return true;
 }
