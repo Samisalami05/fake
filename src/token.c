@@ -13,6 +13,8 @@ char* token_tag_str(TokenType tag) {
 		case TOKEN_PAREN_L: return "(";
 		case TOKEN_PAREN_R: return ")";
 		case TOKEN_EQUALS: return "=";
+		case TOKEN_DOLLAR: return "$";
+		case TOKEN_AT_SIGN: return "@";
 	}
 	return "Unknown";
 }

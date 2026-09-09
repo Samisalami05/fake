@@ -18,6 +18,8 @@ typedef enum {
 	TOKEN_PAREN_L,
 	TOKEN_PAREN_R,
 	TOKEN_EQUALS,
+	TOKEN_DOLLAR,
+	TOKEN_AT_SIGN,
 } TokenType;
 
 char* token_tag_str(TokenType tag);

@@ -19,18 +19,51 @@
 // TEST_NEW = $TEST + "baz" -> "foobaz" "barbaz"
 
 // built-in functions
+// @echo()
 // @mkdir()
 // @file()
 // @rm()
 // @pathsub(main.c camera.c, ".o"
 // @substr()
 
-TEST = wow wowe,
+CC = gcc,
+SRCS = @echo(test),
+//OBJS = $SRCS + .o,
 
-test {
-	gcc -Wall test.c -o test
+test: wow {
+	@echo(),
+	$CC -Wall test.c -o test,
 }
 
 run: test {
 	./test
 }
+
+
+// Future ideas
+
+
+CC = gcc,
+NAME = main,
+
+SRCS = @find(src *.c),
+OBJS = @pathsub($SRCS, src/*.c, build/*.o),
+
+rule $NAME: main.c {
+	@mkdir("build"),
+	$CC main.c -o main
+}
+
+multi $OBJS: $SRCS {
+	@mkdir(#name),
+	$CC #deps -o #name
+}
+
+label run: $NAME {
+	./$NAME
+}
+
+// Ideas
+//  * Ability to add progress bars and text on labels when they are executed
+//		(better) add flag for progress bar
+//

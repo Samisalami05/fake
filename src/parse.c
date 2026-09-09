@@ -1,8 +1,11 @@
 #include "parse.h"
+#include "builtin.h"
 #include "fake.h"
 #include "arraylist.h"
+#include "file.h"
 #include "lex.h"
 #include "log.h"
+#include "str.h"
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -11,10 +14,20 @@
 #include <string.h>
 #include <sys/stat.h>
 
+typedef struct  {
+	FileView file;
+
+	Tokens tokens;
+
+	arraylist variables; // of Variable
+	arraylist labels; // of Label
+	size_t curr; // Current token
+} ParseState;
+
 StrRef get_token_id_str(ParseState* state, uint32_t token_id) {
 	Lexer lexer = {
-		.file = state->file_ptr,
-		.file_size = state->file_size,
+		.file = state->file.ptr,
+		.file_size = state->file.size,
 		.tokens.items = (uint8_t*)state->tokens.ptr,
 		.tokens.count = state->tokens.count,
 	};
@@ -24,20 +37,13 @@ StrRef get_token_id_str(ParseState* state, uint32_t token_id) {
 char* get_token_id_cstr(ParseState* state, uint32_t token_id) {
 	StrRef ref = get_token_id_str(state, token_id);
 	char* cstr = malloc(ref.len + 1);
-	memcpy(cstr, state->file_ptr + ref.src, ref.len);
+	memcpy(cstr, state->file.ptr + ref.src, ref.len);
 	cstr[ref.len] = '\0';
 	return cstr;
 }
 
 Token curr_token(ParseState* state) {
 	return state->tokens.ptr[state->curr];
-}
-
-FileView file_view(ParseState* state) {
-	return (FileView){
-		.ptr = state->file_ptr,
-		.size = state->file_size,
-	};
 }
 
 void parse_error(ParseState* state, char* fmt, ...) {
@@ -49,7 +55,7 @@ void parse_error(ParseState* state, char* fmt, ...) {
 	va_end(args);
 
 	StrRef ref = get_token_id_str(state, state->curr);
-	log_file(LOG_ERROR, file_view(state), ref, msg);
+	log_file(LOG_ERROR, state->file, ref, msg);
 }
 
 bool expect_token(ParseState* state, TokenType token) {
@@ -60,6 +66,19 @@ bool expect_token(ParseState* state, TokenType token) {
 		return false;
 	}
 	return true;
+}
+
+Variable* find_variable(ParseState* state, StrRef name) {
+	char* str = state->file.ptr + name.src;
+
+	foreach (Variable, var, state->variables) {
+		// TODO: might be undefined behaviour
+		if (strlen(var->name) == name.len && memcmp(str, var->name, name.len) == 0) {
+			return var;
+		}
+	}
+
+	return NULL;
 }
 
 bool parse_string(ParseState* state, StrRef* out) {
@@ -80,10 +99,42 @@ bool parse_identifier(ParseState* state, StrRef* out) {
 	return true;
 }
 
-bool parse_command(ParseState* state, Command* cmd) {
-	arraylist_init(&cmd->args, sizeof(char*));
+bool parse_line(ParseState* state, arraylist* out);
 
-	int len = 0;
+// This also executes the builtin function
+bool parse_builtin(ParseState* state, arraylist* out) {
+	StrRef str = get_token_id_str(state, state->curr);
+	StrRef name = { str.src + 1, str.len - 1 };
+	if (name.len <= 0) {
+		state->curr--;
+		parse_error(state, "There does not exist a builtin function without a name");
+		return false;
+	}
+
+	state->curr++;
+	
+	if (!expect_token(state, TOKEN_PAREN_L)) return false;
+	state->curr++;
+
+	arraylist params = {0};
+	if (!parse_line(state, &params)) return false;
+
+	if (!expect_token(state, TOKEN_PAREN_R)) return false;
+	state->curr++;
+
+	char* cstr = str_cstr(state->file.ptr, name);
+	if (!exec_builtin(cstr, params, out)) {
+		parse_error(state, "Failed to execute builtin function '%s'", cstr);
+		return false;
+	}
+
+	return true;
+}
+
+// 'out' is an arraylist of char*
+bool parse_line(ParseState* state, arraylist* out) {
+	arraylist_init(out, sizeof(char*));
+
 	while (1) {
 		StrRef str = {0};
 		TokenType type = curr_token(state).tag;
@@ -94,12 +145,46 @@ bool parse_command(ParseState* state, Command* cmd) {
 			if (!parse_identifier(state, &str)) return false;
 		}
 		else break;
-		char* cstr = str_cstr(state->file_ptr, str); 
-		arraylist_append(&cmd->args, &cstr);
-		len++;
+
+		switch (state->file.ptr[str.src]) {
+			case '$':; // variable
+				StrRef name = { str.src + 1, str.len - 1 };
+				if (name.len <= 0) {
+					state->curr--;
+					parse_error(state, "No name given to variable");
+					return false;
+				}
+
+				Variable* var = find_variable(state, name);
+				if (!var) {
+					state->curr--;
+					parse_error(state, "The variable '%.*s' does not exist", name.len, state->file.ptr + name.src);
+					return false;
+				}
+
+				foreach(char*, value, var->values) {
+					arraylist_append(out, value);
+				}
+				
+				break;
+			case '@':;  // builtin
+				state->curr--;
+				if (!parse_builtin(state, out)) return false;
+
+				break;
+			default:;   // other
+				char* cstr = str_cstr(state->file.ptr, str);
+				arraylist_append(out, &cstr);
+		}
 	}
 
-	if (len == 0) {
+	return true;
+}
+
+bool parse_command(ParseState* state, Command* cmd) {
+	if (!parse_line(state, &cmd->args)) return false;
+
+	if (cmd->args.count == 0) {
 		parse_error(state, "empty command, command cannot be empty");
 		return false;
 	}
@@ -130,7 +215,7 @@ bool parse_node(ParseState *state) {
 		state->curr += 1;
 
 		char* cstr = malloc(dep.len + 1);
-		memcpy(cstr, state->file_ptr + dep.src, dep.len);
+		memcpy(cstr, state->file.ptr + dep.src, dep.len);
 		cstr[dep.len] = '\0';
 		
 		arraylist_append(&node.dependencies, &cstr);
@@ -167,25 +252,22 @@ bool parse_node(ParseState *state) {
 }
 
 bool parse_variable(ParseState* state) {
-	if (!expect_token(state, TOKEN_IDENTIFIER)) return false;
-	char* name = get_token_id_cstr(state, state->curr);
-	state->curr++;
+	Variable var = {0};
+	arraylist_init(&var.values, sizeof(char*));
 
-	log_info("variable %s", name);
+	if (!expect_token(state, TOKEN_IDENTIFIER)) return false;
+	var.name = get_token_id_cstr(state, state->curr);
+	state->curr++;
 
 	if (!expect_token(state, TOKEN_EQUALS)) return false;
 	state->curr++;
 
-	while (curr_token(state).tag != TOKEN_COMMA) {
-		if (!expect_token(state, TOKEN_IDENTIFIER)) return false;
-		char* value = get_token_id_cstr(state, state->curr);
-		log_info("    value %s", value);
-
-		state->curr++;
-	}
+	if (!parse_line(state, &var.values)) return false;
 
 	if (!expect_token(state, TOKEN_COMMA)) return false;
 	state->curr++;
+
+	arraylist_append(&state->variables, &var);
 
 	return true;
 }
@@ -209,10 +291,20 @@ bool parse_statement(ParseState* state) {
 	return true;
 }
 
-bool parse_fakefile(ParseState *state) {
+bool parse_fakefile(FileView file, Tokens tokens, Fakefile* out) {
+	ParseState state = {0};
+	state.file = file;
+	state.tokens = tokens;
+	arraylist_init(&state.variables, sizeof(Variable));
+	arraylist_init(&state.labels, sizeof(Label));
+
 	while (1) {
-		if (curr_token(state).tag == TOKEN_EOF) break;
-		if (!parse_statement(state)) return false;
+		if (curr_token(&state).tag == TOKEN_EOF) break;
+		if (!parse_statement(&state)) return false;
 	}
+
+	out->labels = state.labels;
+	out->variables = state.variables;
+
 	return true;
 }

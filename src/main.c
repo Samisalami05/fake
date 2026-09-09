@@ -18,7 +18,7 @@
 #include "parse_args.h"
 #include "parse.h"
 
-bool exec_command(ParseState *state, Command *c) {
+bool exec_command(Command *c) {
 	void* end = NULL;
 	arraylist_append(&c->args, &end);
 
@@ -31,7 +31,7 @@ bool exec_command(ParseState *state, Command *c) {
 	pid_t pid = fork();
 	if (pid == 0) {
 		execvp(*(char**)c->args.items, (char**)c->args.items);
-		perror("execvp");
+		log_perror("Failed to execute program %s", ((char**)c->args.items)[0]);
 		exit(1);
 	} else if (pid > 0) {
 		int status = 0;
@@ -39,15 +39,6 @@ bool exec_command(ParseState *state, Command *c) {
 		if (status != 0) return false;
 	}
 	return true;
-}
-
-ParseState state_init(FileView file, Tokens tokens) {
-	ParseState state = {0};
-	state.file_ptr = file.ptr;
-	state.file_size = file.size;
-	state.tokens = tokens;
-	arraylist_init(&state.labels, sizeof(Label));
-	return state;
 }
 
 // /path/to/*.c
@@ -66,13 +57,13 @@ int main(int argc, char **argv) {
 	lex(&lexer);
 	Tokens tokens = lexer_tokens(&lexer);
 
-	ParseState state = state_init(file, tokens);
-	if (!parse_fakefile(&state)) {
+	Fakefile fakefile = {0};
+	if (!parse_fakefile(file, tokens, &fakefile)) {
 		log_error("Failed to parse Fakefile\n");
 		return 1;
 	}
 
-	foreach (Label, node, state.labels) {
+	foreach (Label, node, fakefile.labels) {
 		printf("[Node] %s - %ld commands\n", node->name, node->commands.count);
 		
 		foreach (char*, dep, node->dependencies) {
@@ -80,12 +71,14 @@ int main(int argc, char **argv) {
 		}
 
 		foreach (Command, cmd, node->commands) {
-			if (!exec_command(&state, cmd)) {
+			if (!exec_command(cmd)) {
 				fprintf(stderr, "\e[1;91m'%s' interrupted\e[0m: command exited with non zero exit code\n", node->name);
-				break;
+				goto exit;
 			}
 		}
 	}
+
+exit:
 
 	close_file(file);
 }
