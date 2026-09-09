@@ -7,19 +7,33 @@
 
 typedef enum {
 	AST_NODE_VAR_DECL,
+
 	AST_NODE_LABEL,
+	AST_NODE_RULE,
+	AST_NODE_MULTI,
+
 	AST_NODE_CMD,
-	AST_NODE_IDENT,
-	AST_NODE_VARIABLE,
-	AST_NODE_BUILTIN,
+
+	// Expression
+	AST_NODE_EXPRESSION,
+
+	// Operators
+	AST_NODE_ADD,
+	AST_NODE_SUB,
+
+	AST_NODE_SIMPLE_EXPR,
+
+	AST_NODE_IDENTIFIER,
 	AST_NODE_STRING,
+	AST_NODE_VAR_REF,
+	AST_NODE_BUILTIN,
+	AST_NODE_AUTOVAR,
 } AstNodeType;
 
 typedef struct {
 	AstNodeType type;
 	char* name;
 
-	uint32_t* children;
 	size_t child_count;
 } AstNode;
 
