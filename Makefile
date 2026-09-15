@@ -5,11 +5,11 @@ SRCS := $(wildcard src/*.c)
 OBJS := $(patsubst src/%.c,build/%.o,$(SRCS))
 
 $(NAME): $(OBJS)
-	$(CC) $(OBJS) -o $(NAME)
+	$(CC) $(OBJS) -rdynamic -o $(NAME)
 
 build/%.o: src/%.c
 	@mkdir -p build
-	$(CC) -Wall -ggdb -c $< -o $@
+	$(CC) -Wall -finstrument-functions -c $< -o $@
 
 .PHONY: run clean install uninstall
 

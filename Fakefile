@@ -6,6 +6,11 @@
 // TODO: maybe recursive Fakefiles???
 // TODO: maybe preprocessor on env variables (#if)
 
+// Ideas
+//  * Ability to add progress bars and text on labels when they are executed
+//		(better) add flag for progress bar
+
+
 // shell commands
 // TEST = { find "src" -name "*.c" }
 // TEST = @shell(find "src" -name "*.c")
@@ -26,44 +31,29 @@
 // @pathsub(main.c camera.c, ".o"
 // @substr()
 
-CC = gcc,
-SRCS = @echo(test),
-//OBJS = $SRCS + .o,
+CC = wow @wow(ayo, #wow),
 
-test: wow {
-	@echo(),
-	$CC -Wall test.c -o test,
+rule main: main.c {
+	wow "wow" $wow #wow @wow(wow "wow" $wow #wow @wow())
 }
 
-run: test {
-	./test
-}
+// CC = gcc,
+// NAME = main,
 
+// SRCS = @find(src *.c),
+// OBJS = @pathsub($SRCS, src/*.c, build/*.o),
 
-// Future ideas
+// rule $NAME: main.c {
+//	@mkdir("build"),
+//	$CC main.c -o main
+//}
 
+//multi $OBJS: $SRCS {
+//	@mkdir(#name),
+//	$CC #deps -o #name
+//}
 
-CC = gcc,
-NAME = main,
+//label run: $NAME {
+//	./$NAME
+//}
 
-SRCS = @find(src *.c),
-OBJS = @pathsub($SRCS, src/*.c, build/*.o),
-
-rule $NAME: main.c {
-	@mkdir("build"),
-	$CC main.c -o main
-}
-
-multi $OBJS: $SRCS {
-	@mkdir(#name),
-	$CC #deps -o #name
-}
-
-label run: $NAME {
-	./$NAME
-}
-
-// Ideas
-//  * Ability to add progress bars and text on labels when they are executed
-//		(better) add flag for progress bar
-//

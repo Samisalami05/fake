@@ -18,9 +18,8 @@ typedef struct  {
 	FileView file;
 
 	Tokens tokens;
+	Ast ast;
 
-	arraylist variables; // of Variable
-	arraylist labels; // of Label
 	size_t curr; // Current token
 } ParseState;
 
@@ -32,14 +31,6 @@ StrRef get_token_id_str(ParseState* state, uint32_t token_id) {
 		.tokens.count = state->tokens.count,
 	};
 	return lexer_token_id_str(&lexer, token_id);
-}
-
-char* get_token_id_cstr(ParseState* state, uint32_t token_id) {
-	StrRef ref = get_token_id_str(state, token_id);
-	char* cstr = malloc(ref.len + 1);
-	memcpy(cstr, state->file.ptr + ref.src, ref.len);
-	cstr[ref.len] = '\0';
-	return cstr;
 }
 
 Token curr_token(ParseState* state) {
@@ -68,206 +59,195 @@ bool expect_token(ParseState* state, TokenType token) {
 	return true;
 }
 
-Variable* find_variable(ParseState* state, StrRef name) {
-	char* str = state->file.ptr + name.src;
+uint32_t add_node(ParseState* state, uint32_t parent, AstNodeType type, StrRef ref) {
+	if (parent != UINT32_MAX) 
+		state->ast.data[parent].child_count++;
 
-	foreach (Variable, var, state->variables) {
-		// TODO: might be undefined behaviour
-		if (strlen(var->name) == name.len && memcmp(str, var->name, name.len) == 0) {
-			return var;
-		}
-	}
+	AstNode node = {
+		.type = type,
+		.ref = ref,
+		.child_count = 0,
+	};
 
-	return NULL;
+	AL_APPEND(state->ast, node);
+	return state->ast.count - 1;
 }
 
-bool parse_string(ParseState* state, StrRef* out) {
-	if (!expect_token(state, TOKEN_STRING)) return false;
-
-	StrRef ref = get_token_id_str(state, state->curr);
-	ref.src += 1;
-	ref.len -= 2;
-	*out = ref;
-
-	state->curr += 1;
-	return true;
+uint32_t add_node_empty(ParseState* state, uint32_t parent, AstNodeType type) {
+	return add_node(state, parent, type, (StrRef){UINT32_MAX, UINT32_MAX});
 }
 
-bool parse_identifier(ParseState* state, StrRef* out) {
-	*out = get_token_id_str(state, state->curr);
-	state->curr++;
-	return true;
+uint32_t add_node_single(ParseState* state, uint32_t parent, AstNodeType type, uint32_t token) {
+	return add_node(state, parent, type, get_token_id_str(state, token));
 }
 
-bool parse_line(ParseState* state, arraylist* out);
+bool parse_simple_expr(ParseState* state, uint32_t dest);
+bool parse_command(ParseState* state, uint32_t dest);
+bool parse_commands(ParseState* state, uint32_t dest);
+bool parse_deps(ParseState* state, uint32_t dest);
+bool parse_decl(ParseState* state);
+bool parse_statement(ParseState* state);
 
-// This also executes the builtin function
-bool parse_builtin(ParseState* state, arraylist* out) {
-	StrRef str = get_token_id_str(state, state->curr);
-	StrRef name = { str.src + 1, str.len - 1 };
-	if (name.len <= 0) {
-		state->curr--;
-		parse_error(state, "There does not exist a builtin function without a name");
-		return false;
-	}
+uint32_t print_node(Ast* ast, uint32_t node, uint32_t depth);
 
-	state->curr++;
+bool parse_fakefile(FileView file, Tokens tokens, Ast* out) {
+	ParseState state = {0};
+	state.file = file;
+	state.tokens = tokens;
+
+	add_node_empty(&state, UINT32_MAX, AST_NODE_ROOT);
 	
-	if (!expect_token(state, TOKEN_PAREN_L)) return false;
-	state->curr++;
-
-	arraylist params = {0};
-	if (!parse_line(state, &params)) return false;
-
-	if (!expect_token(state, TOKEN_PAREN_R)) return false;
-	state->curr++;
-
-	char* cstr = str_cstr(state->file.ptr, name);
-	if (!exec_builtin(cstr, params, out)) {
-		parse_error(state, "Failed to execute builtin function '%s'", cstr);
-		return false;
-	}
-
-	return true;
-}
-
-// 'out' is an arraylist of char*
-bool parse_line(ParseState* state, arraylist* out) {
-	arraylist_init(out, sizeof(char*));
-
 	while (1) {
-		StrRef str = {0};
-		TokenType type = curr_token(state).tag;
-		if (type == TOKEN_STRING) {
-			if (!parse_string(state, &str)) return false;
+		if (curr_token(&state).tag == TOKEN_EOF) break;
+		if (!parse_statement(&state)) return false;
+	}
+
+	for (int i = 0; i < state.ast.count; i++) {
+		AstNode node = state.ast.data[i];
+		char* str = state.file.ptr + node.ref.src;
+		printf("%3d: %10s", i, ast_type_cstr(node.type));
+		if (node.ref.src == UINT32_MAX) {
+			printf("\n");
+			continue;
 		}
-		else if (type == TOKEN_IDENTIFIER) {
-			if (!parse_identifier(state, &str)) return false;
-		}
-		else break;
+		printf(" - %.*s\n", node.ref.len, str);
+	}
+	print_node(&state.ast, 0, 0);
 
-		switch (state->file.ptr[str.src]) {
-			case '$':; // variable
-				StrRef name = { str.src + 1, str.len - 1 };
-				if (name.len <= 0) {
-					state->curr--;
-					parse_error(state, "No name given to variable");
-					return false;
-				}
+	*out = state.ast;
 
-				Variable* var = find_variable(state, name);
-				if (!var) {
-					state->curr--;
-					parse_error(state, "The variable '%.*s' does not exist", name.len, state->file.ptr + name.src);
-					return false;
-				}
+	return true;
+}
 
-				foreach(char*, value, var->values) {
-					arraylist_append(out, value);
-				}
-				
-				break;
-			case '@':;  // builtin
-				state->curr--;
-				if (!parse_builtin(state, out)) return false;
+bool parse_deps(ParseState* state, uint32_t dest) {
+	while (curr_token(state).tag == TOKEN_IDENTIFIER) {
+		add_node_single(state, dest, AST_NODE_DEP, state->curr);
+		state->curr++;
 
-				break;
-			default:;   // other
-				char* cstr = str_cstr(state->file.ptr, str);
-				arraylist_append(out, &cstr);
-		}
+		if (curr_token(state).tag != TOKEN_COMMA) break;
+		state->curr++;
 	}
 
 	return true;
 }
 
-bool parse_command(ParseState* state, Command* cmd) {
-	if (!parse_line(state, &cmd->args)) return false;
+bool parse_simple_expr(ParseState* state, uint32_t dest) {
+	TokenType tag = curr_token(state).tag;
+	switch (tag) {
+		case TOKEN_IDENTIFIER:
+			add_node_single(state, dest, AST_NODE_IDENTIFIER, state->curr);
+			break;
+		case TOKEN_DOLLAR:
+			state->curr++;
+			if (!expect_token(state, TOKEN_IDENTIFIER)) return false;
+			add_node_single(state, dest, AST_NODE_VAR_REF, state->curr);
+			break;
+		case TOKEN_STRING:;
+			StrRef ref = get_token_id_str(state, state->curr);
+			ref.src++;
+			ref.len -= 2;
+			add_node(state, dest, AST_NODE_STRING, ref);
+			break;
+		case TOKEN_AT_SIGN:
+			state->curr++;
+			if (!expect_token(state, TOKEN_IDENTIFIER)) return false;
+			uint32_t id = add_node_single(state, dest, AST_NODE_BUILTIN, state->curr);
+			state->curr++;
 
-	if (cmd->args.count == 0) {
-		parse_error(state, "empty command, command cannot be empty");
+			if (!expect_token(state, TOKEN_PAREN_L)) return false;
+			state->curr++;
+
+			while (curr_token(state).tag != TOKEN_PAREN_R) {
+				if (!parse_command(state, id)) return false;
+				if (curr_token(state).tag == TOKEN_COMMA) state->curr++;
+			}
+
+			break;
+		case TOKEN_HASHTAG:
+			state->curr++;
+			if (!expect_token(state, TOKEN_IDENTIFIER)) return false;
+			add_node_single(state, dest, AST_NODE_AUTOVAR, state->curr);
+			break;
+		default:
+			parse_error(state, "No expression given");
+			return false;
+	}
+	state->curr++;
+
+	return true;
+}
+bool parse_command(ParseState* state, uint32_t dest) {
+	uint32_t id = add_node_empty(state, dest, AST_NODE_CMD);
+	while (curr_token(state).tag != TOKEN_COMMA && curr_token(state).tag != TOKEN_CURLY_R && curr_token(state).tag != TOKEN_PAREN_R) {
+		if (!parse_simple_expr(state, id)) return false;
+	}
+
+	return true;
+}
+
+bool parse_commands(ParseState* state, uint32_t dest) {
+	while (curr_token(state).tag != TOKEN_CURLY_R) {
+		if (!parse_command(state, dest)) return false;
+		if (curr_token(state).tag == TOKEN_COMMA) state->curr++;
+	}
+	return true;
+}
+
+bool parse_decl(ParseState* state) {
+	if (!expect_token(state, TOKEN_IDENTIFIER)) return false;
+	AstNodeType decl_type = AST_NODE_RULE;
+
+	StrRef type_str = get_token_id_str(state, state->curr);
+	char* type = state->file.ptr + type_str.src;
+	if (type_str.len == 5 && strncmp(type, "label", type_str.len) == 0) {
+		decl_type = AST_NODE_LABEL;
+	}
+	else if (type_str.len == 5 && strncmp(type, "multi", type_str.len) == 0) {
+		decl_type = AST_NODE_MULTI;
+	}
+	else if (type_str.len == 4 && strncmp(type, "rule", type_str.len) == 0) {
+		decl_type = AST_NODE_RULE;
+	}
+	else {
+		parse_error(state, "Unknown decl type '%.*s'", type_str.len, type);
 		return false;
 	}
 
-	return true;
-}
-
-bool parse_node(ParseState *state) {
-	Label node = {0};
-	arraylist_init(&node.commands, sizeof(Command));
-	arraylist_init(&node.dependencies, sizeof(char*));
+	state->curr++;
 
 	if (!expect_token(state, TOKEN_IDENTIFIER)) return false;
-	node.name = get_token_id_cstr(state, state->curr);
+	int id = add_node_single(state, AST_ROOT, decl_type, state->curr);
+	state->curr++;
 
-	state->curr += 1;
-	
+
 	if (curr_token(state).tag == TOKEN_COLON) {
-	state->curr += 1;
-
-	// parse deps
-	while (1) {
-		TokenType first_tag = curr_token(state).tag;
-		if (first_tag == TOKEN_PAREN_R) break;
-
-		if (!expect_token(state, TOKEN_IDENTIFIER)) return false;
-		StrRef dep = get_token_id_str(state, state->curr);
-		state->curr += 1;
-
-		char* cstr = malloc(dep.len + 1);
-		memcpy(cstr, state->file.ptr + dep.src, dep.len);
-		cstr[dep.len] = '\0';
-		
-		arraylist_append(&node.dependencies, &cstr);
-
-		if (curr_token(state).tag == TOKEN_CURLY_L) break;
-		if (!expect_token(state, TOKEN_COMMA)) return false;
-		state->curr += 1;
-	}
+		state->curr++;
+		if (!parse_deps(state, id)) return false;
 	}
 
-	// parse body
 	if (!expect_token(state, TOKEN_CURLY_L)) return false;
-	state->curr += 1;
+	state->curr++;
 
-	// parse commands
-	while (1) {
-		if (curr_token(state).tag == TOKEN_CURLY_R) break;
+	if (!parse_commands(state, id)) return false;
 
-		Command c = {0};
-		if (!parse_command(state, &c)) return false;
-		arraylist_append(&node.commands, &c);
-		
-		if (curr_token(state).tag == TOKEN_CURLY_R) break;
-		if (!expect_token(state, TOKEN_COMMA)) return false;
-		state->curr += 1;
-	}
-	
 	if (!expect_token(state, TOKEN_CURLY_R)) return false;
-	state->curr += 1;
-
-	arraylist_append(&state->labels, &node);
+	state->curr++;
 
 	return true;
 }
 
-bool parse_variable(ParseState* state) {
-	Variable var = {0};
-	arraylist_init(&var.values, sizeof(char*));
-
+bool parse_var_decl(ParseState* state) {
 	if (!expect_token(state, TOKEN_IDENTIFIER)) return false;
-	var.name = get_token_id_cstr(state, state->curr);
+	int id = add_node_single(state, AST_ROOT, AST_NODE_VAR_DECL, state->curr);
 	state->curr++;
 
 	if (!expect_token(state, TOKEN_EQUALS)) return false;
 	state->curr++;
 
-	if (!parse_line(state, &var.values)) return false;
+	if (!parse_command(state, id)) return false;
 
 	if (!expect_token(state, TOKEN_COMMA)) return false;
 	state->curr++;
-
-	arraylist_append(&state->variables, &var);
 
 	return true;
 }
@@ -276,35 +256,28 @@ bool parse_statement(ParseState* state) {
 	if (!expect_token(state, TOKEN_IDENTIFIER)) return false;
 	state->curr++;
 
-	TokenType type = curr_token(state).tag;
+	TokenType tag = curr_token(state).tag;
 	state->curr--;
-
-	switch (type) {
-		case TOKEN_CURLY_L:
-		case TOKEN_COLON: return parse_node(state);
-		case TOKEN_EQUALS: return parse_variable(state);
+	switch (tag) {
+		case TOKEN_EQUALS:
+			if (!parse_var_decl(state)) return false;
+			break;
 		default:
-			state->curr++;
-			parse_error(state, "Expected ':', '{' or '=', got '%s'", token_tag_str(type));
-			return false;
+			if (!parse_decl(state)) return false;
 	}
+
 	return true;
 }
 
-bool parse_fakefile(FileView file, Tokens tokens, Fakefile* out) {
-	ParseState state = {0};
-	state.file = file;
-	state.tokens = tokens;
-	arraylist_init(&state.variables, sizeof(Variable));
-	arraylist_init(&state.labels, sizeof(Label));
+uint32_t print_node(Ast* ast, uint32_t node, uint32_t depth) {
+	for (int i = 0; i < depth; i++) printf("  ");
 
-	while (1) {
-		if (curr_token(&state).tag == TOKEN_EOF) break;
-		if (!parse_statement(&state)) return false;
+	AstNode n = ast->data[node];
+	printf("%s\n", ast_type_cstr(n.type));
+	
+	uint32_t curr = node;
+	for (int i = 0; i < n.child_count; i++) {
+		curr = print_node(ast, curr + 1, depth + 1);
 	}
-
-	out->labels = state.labels;
-	out->variables = state.variables;
-
-	return true;
+	return curr;
 }

@@ -3,6 +3,30 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#define AL_APPEND(list, value) \
+	do { \
+		if (list.count + 1 > list.capacity) { \
+			list.capacity = list.capacity == 0 ? 4 : list.capacity * 2; \
+			void* tmp = realloc(list.data, list.capacity * sizeof(value)); \
+			if (tmp == NULL) { \
+				perror("Arraylist: AL_APPEND()"); \
+			} \
+			/* Have to do this in cpp :( */ \
+			memcpy(&list.data, &tmp, sizeof(tmp)); \
+		} \
+		\
+		memcpy(list.data + list.count, &value, sizeof(value)); \
+		list.count++; \
+	\
+	} while (0)
+
+#define AL_BACK(list) list.data[list.count - 1]
+
+#define AL_POP_BACK(list) \
+		if (list.count != 0) { \
+			list.count--; \
+		}
+
 typedef struct {
 	uint8_t* items;
 	size_t count;

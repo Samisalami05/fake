@@ -41,44 +41,41 @@ bool exec_command(Command *c) {
 	return true;
 }
 
+uint32_t sum_cmd(Ast* ast, uint32_t node, arraylist* out) {
+	
+}
+
+uint32_t exec_cmd(Ast* ast, uint32_t node) {
+	AstNode n = ast->data[node];
+	for (int i = 0; i < n.child_count; i++) {
+		AstNode child = ast->data[node + i];
+		
+	}
+}
+
 // /path/to/*.c
 // "/path/to/*.c"
 
 int main(int argc, char **argv) {
+	parse_args(argv);
+
 	FileView file = {0};
 	if (!read_file("Fakefile", &file)) {
 		log_warning("no 'Fakefile' found");
 		return 1;
 	}
 
-	parse_args(argv);
-
 	Lexer lexer = lexer_from_file(file);
 	lex(&lexer);
 	Tokens tokens = lexer_tokens(&lexer);
 
-	Fakefile fakefile = {0};
-	if (!parse_fakefile(file, tokens, &fakefile)) {
+	Ast ast;
+	if (!parse_fakefile(file, tokens, &ast)) {
 		log_error("Failed to parse Fakefile\n");
 		return 1;
 	}
 
-	foreach (Label, node, fakefile.labels) {
-		printf("[Node] %s - %ld commands\n", node->name, node->commands.count);
-		
-		foreach (char*, dep, node->dependencies) {
-			printf("\t%s\n", *dep);
-		}
-
-		foreach (Command, cmd, node->commands) {
-			if (!exec_command(cmd)) {
-				fprintf(stderr, "\e[1;91m'%s' interrupted\e[0m: command exited with non zero exit code\n", node->name);
-				goto exit;
-			}
-		}
-	}
-
-exit:
+	
 
 	close_file(file);
 }

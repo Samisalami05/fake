@@ -20,6 +20,7 @@ typedef enum {
 	TOKEN_EQUALS,
 	TOKEN_DOLLAR,
 	TOKEN_AT_SIGN,
+	TOKEN_HASHTAG
 } TokenType;
 
 char* token_tag_str(TokenType tag);

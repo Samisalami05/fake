@@ -9,4 +9,4 @@
 
 // TODO: build parse tree for lsp
 
-bool parse_fakefile(FileView file, Tokens tokens, Fakefile* out);
+bool parse_fakefile(FileView file, Tokens tokens, Ast* out);
