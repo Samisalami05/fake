@@ -82,13 +82,13 @@ uint32_t add_node_single(ParseState* state, uint32_t parent, AstNodeType type, u
 }
 
 bool parse_simple_expr(ParseState* state, uint32_t dest);
-bool parse_command(ParseState* state, uint32_t dest);
+bool parse_command(ParseState* state, uint32_t dest, AstNodeType type);
 bool parse_commands(ParseState* state, uint32_t dest);
 bool parse_deps(ParseState* state, uint32_t dest);
 bool parse_decl(ParseState* state);
 bool parse_statement(ParseState* state);
 
-uint32_t print_node(Ast* ast, uint32_t node, uint32_t depth);
+uint32_t print_node(Ast* ast, FileView file, uint32_t node, uint32_t depth);
 
 bool parse_fakefile(FileView file, Tokens tokens, Ast* out) {
 	ParseState state = {0};
@@ -102,31 +102,9 @@ bool parse_fakefile(FileView file, Tokens tokens, Ast* out) {
 		if (!parse_statement(&state)) return false;
 	}
 
-	for (int i = 0; i < state.ast.count; i++) {
-		AstNode node = state.ast.data[i];
-		char* str = state.file.ptr + node.ref.src;
-		printf("%3d: %10s", i, ast_type_cstr(node.type));
-		if (node.ref.src == UINT32_MAX) {
-			printf("\n");
-			continue;
-		}
-		printf(" - %.*s\n", node.ref.len, str);
-	}
-	print_node(&state.ast, 0, 0);
+	print_node(&state.ast, file, 0, 0);
 
 	*out = state.ast;
-
-	return true;
-}
-
-bool parse_deps(ParseState* state, uint32_t dest) {
-	while (curr_token(state).tag == TOKEN_IDENTIFIER) {
-		add_node_single(state, dest, AST_NODE_DEP, state->curr);
-		state->curr++;
-
-		if (curr_token(state).tag != TOKEN_COMMA) break;
-		state->curr++;
-	}
 
 	return true;
 }
@@ -158,7 +136,7 @@ bool parse_simple_expr(ParseState* state, uint32_t dest) {
 			state->curr++;
 
 			while (curr_token(state).tag != TOKEN_PAREN_R) {
-				if (!parse_command(state, id)) return false;
+				if (!parse_command(state, id, AST_NODE_CMD)) return false;
 				if (curr_token(state).tag == TOKEN_COMMA) state->curr++;
 			}
 
@@ -169,16 +147,17 @@ bool parse_simple_expr(ParseState* state, uint32_t dest) {
 			add_node_single(state, dest, AST_NODE_AUTOVAR, state->curr);
 			break;
 		default:
-			parse_error(state, "No expression given");
+			parse_error(state, "Expected expression, got '%s'", token_tag_str(tag));
 			return false;
 	}
 	state->curr++;
 
 	return true;
 }
-bool parse_command(ParseState* state, uint32_t dest) {
-	uint32_t id = add_node_empty(state, dest, AST_NODE_CMD);
-	while (curr_token(state).tag != TOKEN_COMMA && curr_token(state).tag != TOKEN_CURLY_R && curr_token(state).tag != TOKEN_PAREN_R) {
+
+bool parse_command(ParseState* state, uint32_t dest, AstNodeType type) {
+	uint32_t id = add_node_empty(state, dest, type);
+	while (curr_token(state).tag != TOKEN_COMMA && curr_token(state).tag != TOKEN_CURLY_L && curr_token(state).tag != TOKEN_CURLY_R && curr_token(state).tag != TOKEN_PAREN_R && curr_token(state).tag != TOKEN_COLON) {
 		if (!parse_simple_expr(state, id)) return false;
 	}
 
@@ -187,7 +166,7 @@ bool parse_command(ParseState* state, uint32_t dest) {
 
 bool parse_commands(ParseState* state, uint32_t dest) {
 	while (curr_token(state).tag != TOKEN_CURLY_R) {
-		if (!parse_command(state, dest)) return false;
+		if (!parse_command(state, dest, AST_NODE_CMD)) return false;
 		if (curr_token(state).tag == TOKEN_COMMA) state->curr++;
 	}
 	return true;
@@ -215,14 +194,12 @@ bool parse_decl(ParseState* state) {
 
 	state->curr++;
 
-	if (!expect_token(state, TOKEN_IDENTIFIER)) return false;
-	int id = add_node_single(state, AST_ROOT, decl_type, state->curr);
-	state->curr++;
-
+	int id = add_node_empty(state, AST_ROOT, decl_type);
+	if (!parse_command(state, id, AST_NODE_NAMES)) return false;
 
 	if (curr_token(state).tag == TOKEN_COLON) {
 		state->curr++;
-		if (!parse_deps(state, id)) return false;
+		if (!parse_command(state, id, AST_NODE_DEPS)) return false;
 	}
 
 	if (!expect_token(state, TOKEN_CURLY_L)) return false;
@@ -244,7 +221,7 @@ bool parse_var_decl(ParseState* state) {
 	if (!expect_token(state, TOKEN_EQUALS)) return false;
 	state->curr++;
 
-	if (!parse_command(state, id)) return false;
+	if (!parse_command(state, id, AST_NODE_CMD)) return false;
 
 	if (!expect_token(state, TOKEN_COMMA)) return false;
 	state->curr++;
@@ -269,15 +246,22 @@ bool parse_statement(ParseState* state) {
 	return true;
 }
 
-uint32_t print_node(Ast* ast, uint32_t node, uint32_t depth) {
+uint32_t print_node(Ast* ast, FileView file, uint32_t node, uint32_t depth) {
+	AstNode n = ast->data[node];
+	printf("%3u | ", node);
+	if (n.ref.src != UINT32_MAX) {
+		 printf("%-7.*s | ", n.ref.len, file.ptr + n.ref.src); 
+	}
+	else printf("        | ");
+
 	for (int i = 0; i < depth; i++) printf("  ");
 
-	AstNode n = ast->data[node];
-	printf("%s\n", ast_type_cstr(n.type));
-	
+	printf("%-10s", ast_type_cstr(n.type));
+		printf("\n");
+
 	uint32_t curr = node;
 	for (int i = 0; i < n.child_count; i++) {
-		curr = print_node(ast, curr + 1, depth + 1);
+		curr = print_node(ast, file, curr + 1, depth + 1);
 	}
 	return curr;
 }

@@ -26,15 +26,24 @@
 // built-in functions
 // @echo()
 // @mkdir()
-// @file()
+// @mkfile()
 // @rm()
+// @concat()
 // @pathsub(main.c camera.c, ".o"
 // @substr()
+// @env()
 
-CC = wow @wow(ayo, #wow),
+CC = gcc @echo(),
+CXX = $CC,
 
-rule main: main.c {
-	wow "wow" $wow #wow @wow(wow "wow" $wow #wow @wow())
+rule main wowe: main.c {
+	@echo(#names),
+	@echo(#deps),
+	// $CC main.c -o main,
+}
+
+multi test ayo: test.c ayo.c {
+	@echo("wwo", "wowe"),
 }
 
 // CC = gcc,

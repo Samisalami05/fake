@@ -4,6 +4,8 @@
 #include <fcntl.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -87,4 +89,16 @@ FileLine file_line(FileView file, uint64_t index) {
 		}
 	};
 	return line;
+}
+
+char* file_str_ref(FileView file, StrRef ref) {
+	char* str = malloc(ref.len + 1);
+	if (str == NULL) {
+		log_perror("file_str_ref() - malloc");
+		return NULL;
+	}
+
+	memcpy(str, file.ptr + ref.src, ref.len);
+	str[ref.len] = '\0';
+	return str;
 }

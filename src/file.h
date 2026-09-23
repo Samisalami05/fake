@@ -29,4 +29,6 @@ uint64_t file_line_end(FileView file, uint64_t index);
 // Includes '\n'
 FileLine file_line(FileView file, uint64_t index);
 
+char* file_str_ref(FileView file, StrRef ref);
+
 #endif

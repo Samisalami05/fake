@@ -4,7 +4,8 @@
 #include <string.h>
 #include <dirent.h>
 
-static bool find(arraylist params, arraylist* out) {
+static bool find(arraylist* args, int count, arraylist* out) {
+	/*
 	if (params.count == 0) return false;
 
 	char* dir_name = ((char**)params.items)[0];
@@ -25,21 +26,23 @@ static bool find(arraylist params, arraylist* out) {
 		}
 	}
 
-	closedir(dir);
+	closedir(dir); */
 	return true;
 }
 
-static bool echo(arraylist params, arraylist* out) {
-	foreach (char*, param, params) {
-		printf("%s ", *param);
-		arraylist_append(out, param);
+static bool echo(arraylist* args, int count, arraylist* out) {
+	for (int i = 0; i < count; i++) {
+		foreach (char*, param, args[i]) {
+			printf("%s ", *param);
+			//arraylist_append(out, param);
+		}
 	}
 	printf("\n");
 	return true;
 }
 
-bool exec_builtin(const char* name, arraylist params, arraylist* out) {
-	if (strcmp(name, "find") == 0) return find(params, out);
-	else if (strcmp(name, "echo") == 0) return echo(params, out);
+bool exec_builtin(const char* name, arraylist* args, int count, arraylist* out) {
+	if (strcmp(name, "find") == 0) return find(args, count, out);
+	else if (strcmp(name, "echo") == 0) return echo(args, count, out);
 	return false;
 }

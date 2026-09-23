@@ -4,6 +4,6 @@
 #include "arraylist.h"
 #include <stdbool.h>
 
-bool exec_builtin(const char* name, arraylist params, arraylist* out);
+bool exec_builtin(const char* name, arraylist* args, int count, arraylist* out);
 
 #endif

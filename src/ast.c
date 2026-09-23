@@ -11,7 +11,8 @@ char* ast_type_cstr(AstNodeType type) {
 		case AST_NODE_RULE: return "rule";
 		case AST_NODE_MULTI: return "multi";
 		case AST_NODE_CMD: return "command";
-		case AST_NODE_DEP: return "dependency";
+		case AST_NODE_DEPS: return "deps";
+		case AST_NODE_NAMES: return "names";
 		case AST_NODE_EXPRESSION: return "expression";
 		case AST_NODE_ADD: return "add";
 		case AST_NODE_SUB: return "sub";

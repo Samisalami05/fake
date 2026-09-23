@@ -1,7 +1,6 @@
 #pragma once
 #include "arraylist.h"
 #include "str.h"
-#include <gc.h>
 
 // TODO: arena allocator!
 
@@ -17,7 +16,8 @@ typedef enum {
 	AST_NODE_MULTI,
 
 	AST_NODE_CMD,
-	AST_NODE_DEP,
+	AST_NODE_DEPS,
+	AST_NODE_NAMES,
 
 	// Expression
 	AST_NODE_EXPRESSION,
@@ -80,11 +80,6 @@ char* ast_type_cstr(AstNodeType type);
 //   IDENT
 //   VAR
 
-typedef struct {
-	char* name;
-	arraylist values; // of allocated char*
-} Variable;
-
 typedef enum {
 	EXPRESSION_IDENT,
 	EXPRESSION_STRING,
@@ -96,15 +91,16 @@ typedef struct {
 	char* value;
 } Expression;
 
-typedef struct {
-	arraylist args; // of allocated char*
-} Command;
+typedef enum {
+	BLOCK_LABEL,
+	BLOCK_RULE
+} BlockType;
 
 typedef struct {
-	char* name;
-	arraylist commands; // of Command
-	arraylist dependencies; // of allocated char*
-} Label;
+	uint32_t node;
+	BlockType type;
+	arraylist deps; // of allocated char*
+} Block;
 
 typedef struct {
 	arraylist variables; // of Variable
