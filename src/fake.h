@@ -97,8 +97,10 @@ typedef enum {
 } BlockType;
 
 typedef struct {
+	char* name;
 	uint32_t node;
 	BlockType type;
+	// TODO: deps should consist of ids
 	arraylist deps; // of allocated char*
 } Block;
 

@@ -32,6 +32,12 @@ void arraylist_append(arraylist* list, void *item) {
 	list->count++;
 }
 
+void arraylist_appendn(arraylist* list, void *items, size_t count) {
+	resize(list, list->count+count);
+	memcpy(list->items + list->count*list->item_size, items, list->item_size * count);
+	list->count += count;
+}
+
 void arraylist_deinit(arraylist* list) {
 	free(list->items);
 	list->capacity = 0;

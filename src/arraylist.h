@@ -43,5 +43,6 @@ typedef struct {
 arraylist arraylist_new(size_t item_size);
 void arraylist_init(arraylist* list, size_t item_size);
 void arraylist_append(arraylist* list, void* item);
+void arraylist_appendn(arraylist* list, void *items, size_t count);
 void arraylist_deinit(arraylist* list);
 void arraylist_clear(arraylist* list);

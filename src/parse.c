@@ -102,7 +102,7 @@ bool parse_fakefile(FileView file, Tokens tokens, Ast* out) {
 		if (!parse_statement(&state)) return false;
 	}
 
-	print_node(&state.ast, file, 0, 0);
+	//print_node(&state.ast, file, 0, 0);
 
 	*out = state.ast;
 

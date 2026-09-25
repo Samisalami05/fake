@@ -93,6 +93,7 @@ void lex(Lexer* lexer) {
 		if (i == '/') identifier_map[i] = 1;
 		if (i == '.') identifier_map[i] = 1;
 		if (i == '-') identifier_map[i] = 1;
+		if (i == '*') identifier_map[i] = 1;
 	}
 
     while (!is_at_end(lexer)) {
@@ -103,7 +104,7 @@ void lex(Lexer* lexer) {
 		if ((c >= 'a' && c <= 'z') ||
 			(c >= 'A' && c <= 'Z') ||
 			 c == '-' || c == '/'  ||
-			 c == '.') {
+			 c == '.' || c == '*') {
 			lex_identifier(lexer);
 			continue;
 		}

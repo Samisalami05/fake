@@ -9,7 +9,7 @@ $(NAME): $(OBJS)
 
 build/%.o: src/%.c
 	@mkdir -p build
-	$(CC) -Wall -finstrument-functions -c $< -o $@
+	$(CC) -Wall -ggdb -finstrument-functions -c $< -o $@
 
 .PHONY: run clean install uninstall
 
@@ -17,11 +17,10 @@ run: $(NAME)
 	@./fake
 
 install: $(NAME)
-	mkdir -p ~/.local/bin
-	cp $(NAME) ~/.local/bin
+	sudo cp $(NAME) /usr/local/bin
 
 uninstall:
-	rm -f ~/.local/bin/$(NAME)
+	rm -f /usr/local/bin/$(NAME)
 
 clean:
 	rm -f fake

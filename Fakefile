@@ -10,19 +10,6 @@
 //  * Ability to add progress bars and text on labels when they are executed
 //		(better) add flag for progress bar
 
-
-// shell commands
-// TEST = { find "src" -name "*.c" }
-// TEST = @shell(find "src" -name "*.c")
-
-// file glob
-// TEST = src/**.c
-// TEST = @find(src, "c")
-
-// TEST = "foo" "bar"
-// TEST_NEW = $TEST "baz" -> "foo" "bar" "baz"
-// TEST_NEW = $TEST + "baz" -> "foobaz" "barbaz"
-
 // built-in functions
 // @echo()
 // @mkdir()
@@ -32,37 +19,25 @@
 // @pathsub(main.c camera.c, ".o"
 // @substr()
 // @env()
+// @silent()
 
-CC = gcc @echo(),
-CXX = $CC,
+CC = cc,
+SRCS = @find(src, "*.c"),
+OBJS = @pathsub($SRCS, "src/*.c", "tmp/*.o"),
 
-rule main wowe: main.c {
-	@echo(#names),
-	@echo(#deps),
-	// $CC main.c -o main,
+label build: test {}
+
+rule test: $OBJS {
+	$CC $OBJS -o test
 }
 
-multi test ayo: test.c ayo.c {
-	@echo("wwo", "wowe"),
+multi $OBJS: $SRCS {
+	@mkdir(tmp),
+	$CC #deps -c -o #name
 }
 
-// CC = gcc,
-// NAME = main,
-
-// SRCS = @find(src *.c),
-// OBJS = @pathsub($SRCS, src/*.c, build/*.o),
-
-// rule $NAME: main.c {
-//	@mkdir("build"),
-//	$CC main.c -o main
-//}
-
-//multi $OBJS: $SRCS {
-//	@mkdir(#name),
-//	$CC #deps -o #name
-//}
-
-//label run: $NAME {
-//	./$NAME
-//}
-
+label clean {
+	rm -f test,
+	rm -f test.o,
+	rm -rf tmp
+}

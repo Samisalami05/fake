@@ -111,7 +111,7 @@ int process_cmd(Ast* ast, int node, FileView file, arraylist* out, char* target)
 					return -1;
 				}
 				char* name = file_str_ref(file, child.ref);
-				if (strcmp(name, "names") == 0) {
+				if (strcmp(name, "name") == 0) {
 					arraylist_append(out, &target);
 				}
 				else if (strcmp(name, "deps") == 0) {
@@ -203,6 +203,7 @@ bool process_block(Ast* ast, int node, FileView file) {
 			char* name = ((char**)names.items)[i];
 
 			Block block = {0};
+			block.name = name;
 			block.type = type;
 			block.deps = deps;
 			block.node = node;
@@ -221,6 +222,7 @@ bool process_block(Ast* ast, int node, FileView file) {
 			char* name = ((char**)names.items)[i];
 			
 			Block block = {0};
+			block.name = name;
 			block.type = type;
 			block.deps = arraylist_new(sizeof(char*));
 			arraylist_append(&block.deps, ((char**)deps.items) + i);
@@ -254,6 +256,7 @@ bool prepass(Ast* ast, FileView file) {
 		}
 	}
 
+	/*
 	for (int i = 0; i < stbds_shlen(varmap); i++) {
 		printf("%s = ", varmap[i].key);
 		foreach (char*, val, varmap[i].value) {
@@ -272,17 +275,44 @@ bool prepass(Ast* ast, FileView file) {
 		printf("(%d)", block.node);
 		printf("\n");
 	}
+	printf("\n");
+	*/
 	return true;
 }
 
-bool execute_block(Ast* ast, char* name, FileView file) {
-	uint32_t id = stbds_shgeti(blockmap, name);
-	if (id == -1) {
-		log_error("Failed to execute block: '%s' does not exist", name);
-		return false;
+bool should_execute(uint32_t id) {
+    Block block = get_block(id);
+
+    if (block.type == BLOCK_LABEL) return true;
+
+    struct stat target;
+    if (stat(block.name, &target) != 0)
+        return true;
+
+    foreach (char*, dep_name, block.deps) {
+        struct stat dep_stat;
+
+        if (stat(*dep_name, &dep_stat) != 0)
+            return true;
+
+        if (dep_stat.st_mtime > target.st_mtime)
+            return true;
+    }
+
+    return false;
+}
+
+bool execute_block(Ast* ast, uint32_t id, FileView file) {
+	if (!should_execute(id)) return true;
+
+	Block block = get_block(id);
+	foreach (char*, dep, block.deps) {
+		uint32_t id = stbds_shgeti(blockmap, *dep);
+		if (id == -1) continue;
+
+		if (!execute_block(ast, id, file)) return false;
 	}
 
-	Block block = ((Block*)blocks.items)[id];
 	AstNode node = ast->data[block.node];
 	int pos = block.node + 1;
 	for (int i = 0; i < node.child_count; i++) {
@@ -298,11 +328,19 @@ bool execute_block(Ast* ast, char* name, FileView file) {
 				break;
 			case AST_NODE_CMD: {
 				arraylist arglist = arraylist_new(sizeof(char*));
-				pos = process_cmd(ast, pos, file, &arglist, name);
+				pos = process_cmd(ast, pos, file, &arglist, block.name);
 				if (pos == -1) {
 					log_error("Failed to execute block");
 					return false;
 				}
+
+				if (arglist.count == 0) continue;
+
+				foreach (char*, arg, arglist) {
+					printf("%s ", *arg);
+				}
+				printf("\n");
+
 				void* null = NULL;
 				arraylist_append(&arglist, &null);
 
@@ -331,7 +369,7 @@ bool execute_block(Ast* ast, char* name, FileView file) {
 }
 
 int main(int argc, char **argv) {
-	parse_args(argv);
+	//parse_args(argv);
 
 	FileView file = {0};
 	if (!read_file("Fakefile", &file)) {
@@ -353,10 +391,20 @@ int main(int argc, char **argv) {
 		log_error("Prepass failed");
 		return 1;
 	}
+	
+	if (argc == 1 && blocks.count == 0) goto exit;
 
-	if (blocks.count > 0) {
-		char* first = blockmap[0].key;
-		execute_block(&ast, first, file);
+	char* target;
+	if (argc == 2) target = argv[1];
+	else target = blockmap[0].key;
+
+	uint32_t id = stbds_shgeti(blockmap, target);
+	if (id == -1) {
+		log_error("Failed to execute block: '%s' does not exist", argv[1]);
+		goto exit;
 	}
+	execute_block(&ast, id, file);
+
+exit:
 	close_file(file);
 }
