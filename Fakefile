@@ -1,3 +1,6 @@
+// TODO: deps should consist of ids
+// TODO: look for circular dependencies
+// TODO: prepass should look for invalid builtins and macros
 // TODO: maybe recursive Fakefiles???
 // TODO: maybe preprocessor on env variables (#if)
 

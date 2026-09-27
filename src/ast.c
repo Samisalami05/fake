@@ -1,7 +1,7 @@
 #ifndef AST_H
 #define AST_H
 
-#include "fake.h"
+#include "parse.h"
 
 char* ast_type_cstr(AstNodeType type) {
 	switch (type) {
