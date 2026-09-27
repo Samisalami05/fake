@@ -80,30 +80,11 @@ int process_cmd(Interpretter* in, int node, arraylist* out, char* target) {
 			}
 			case AST_NODE_VAR_REF: {
 				char* name = file_str_ref(in->file, child.ref);
-				int var = find_var(in, name);
-				if (var == -1) {
-					log_error("Variable '%s' does not exist", name);
-					return -1;
-				}
-
-				arraylist values = in->varmap[var].value;
-				foreach (char*, val, values) {
-					arraylist_append(out, val);
-				}
-				pos++;
-				break;
-			}
-			case AST_NODE_AUTOVAR: {
-				if (!target) {
-					log_error("Autovars can only exist in blocks");
-					return -1;
-				}
-				char* name = file_str_ref(in->file, child.ref);
-				if (strcmp(name, "name") == 0) {
+				if (target && strcmp(name, "name") == 0) {
 					arraylist_append(out, &target);
 				}
-				else if (strcmp(name, "deps") == 0) {
-					int id = stbds_shgeti(in->blockmap, target);
+				else if (target && strcmp(name, "deps") == 0) {
+					int id = find_block(in, target);
 					if (id == -1) {
 						log_error("Unreachable");
 						return -1;
@@ -115,9 +96,31 @@ int process_cmd(Interpretter* in, int node, arraylist* out, char* target) {
 					}
 				}
 				else {
-					log_error("Autovar '%s' does not exist", name);
+					int var = find_var(in, name);
+					if (var == -1) {
+						log_error("Variable '%s' does not exist", name);
+						return -1;
+					}
+					
+					arraylist values = in->varmap[var].value;
+					foreach (char*, val, values) {
+						arraylist_append(out, val);
+					}
+				}
+
+				pos++;
+				break;
+			}
+			case AST_NODE_AUTOVAR: {
+				log_error("Autovars not implemented");
+				return -1;
+
+				if (!target) {
+					log_error("Autovars can only exist in blocks");
 					return -1;
 				}
+				char* name = file_str_ref(in->file, child.ref);
+				
 				pos++;
 				break;
 			}

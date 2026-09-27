@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+#include <stdbool.h>
 
 /*
  * Argument parsing for fake
@@ -20,4 +21,4 @@ typedef struct {
 } fake_config ;
 */
 
-void parse_args(char **argv);
+bool parse_args(char **argv);

@@ -21,7 +21,7 @@
 #include "parse.h"
 
 int main(int argc, char **argv) {
-	//parse_args(argv);
+	if (!parse_args(argv)) return 1;
 
 	FileView file = {0};
 	if (!read_file("Fakefile", &file)) {

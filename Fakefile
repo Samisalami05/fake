@@ -18,6 +18,7 @@
 // @substr()
 // @env()
 // @silent()
+// @combine(var, sep)
 
 CC = cc,
 SRCS = @find(src, "*.c"),
@@ -31,7 +32,7 @@ rule test: $OBJS {
 
 multi $OBJS: $SRCS {
 	@mkdir(tmp),
-	$CC #deps -c -o #name
+	$CC $deps -c -o $name
 }
 
 label clean {
