@@ -26,6 +26,8 @@ NAME = fake,
 SRCS = @find(src, "*.c"),
 OBJS = @pathsub($SRCS, "src/*.c", "build/*.o"),
 
+TEST = @dirname("src/main.c"),
+
 label build: $NAME { }
 
 rule $NAME: $OBJS {
@@ -33,7 +35,7 @@ rule $NAME: $OBJS {
 }
 
 multi $OBJS: $SRCS {
-	@mkdir(build build/builtins),
+	@mkdir(@dirname($name)),
 	$CC $deps -c -o $name
 }
 
