@@ -22,21 +22,24 @@
 
 CC = cc,
 SRCS = @find(src, "*.c"),
-OBJS = @pathsub($SRCS, "src/*.c", "tmp/*.o"),
+OBJS = @pathsub($SRCS, "src/*.c", "build/*.o"),
 
-label build: test {}
+label build: fake {}
 
-rule test: $OBJS {
-	$CC $OBJS -o test
+rule fake: $OBJS {
+	$CC $OBJS -o fake
 }
 
 multi $OBJS: $SRCS {
-	@mkdir(tmp),
+	@mkdir(build),
 	$CC $deps -c -o $name
 }
 
 label clean {
-	rm -f test,
-	rm -f test.o,
-	rm -rf tmp
+	rm -f fake,
+	rm -rf build
+}
+
+label run {
+	./fake
 }

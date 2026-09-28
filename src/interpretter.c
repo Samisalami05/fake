@@ -246,29 +246,6 @@ bool run_prepass(Interpretter* in) {
 		}
 	}
 
-	/*
-	for (int i = 0; i < stbds_shlen(varmap); i++) {
-		printf("%s = ", varmap[i].key);
-		foreach (char*, val, varmap[i].value) {
-			printf("%s ", *val);
-		}
-		printf("\n");
-	}
-
-	for (int i = 0; i < stbds_shlen(blockmap); i++) {
-		printf("%s: ", blockmap[i].key);
-		uint32_t id = blockmap[i].value;
-		Block block = ((Block*)blocks.items)[id];
-		foreach (char*, dep, block.deps) {
-			printf("%s ", *dep);
-		}
-		printf("(%d)", block.node);
-		printf("\n");
-	}
-	printf("\n");
-	*/
-
-
 	return true;
 }
 
@@ -358,4 +335,29 @@ bool execute_block(Interpretter* in, uint32_t id) {
 		}
 	}
 	return true;
+}
+
+void in_debug(Interpretter* in) {
+	printf("\nVariables:\n");
+	for (int i = 0; i < stbds_shlen(in->varmap); i++) {
+		printf("    %s = ", in->varmap[i].key);
+		foreach (char*, val, in->varmap[i].value) {
+			printf("\e[38;5;243m%s\e[0m ", *val);
+		}
+		printf("\n");
+	}
+
+	printf("\nBlocks:\n");
+
+	for (int i = 0; i < stbds_shlen(in->blockmap); i++) {
+		printf("    %s: ", in->blockmap[i].key);
+		uint32_t id = in->blockmap[i].value;
+		Block block = get_block(in, id);
+		foreach (char*, dep, block.deps) {
+			printf("\e[38;5;243m%s\e[0m ", *dep);
+		}
+		printf("(%d)", block.node);
+		printf("\n");
+	}
+	printf("\n");
 }

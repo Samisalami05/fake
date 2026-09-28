@@ -49,8 +49,9 @@ typedef struct {
 Tokens lexer_tokens(Lexer* lexer);
 
 void lex(Lexer* lexer);
-StrRef lexer_token_str(Lexer* lexer, Token token);
 StrRef lexer_token_id_str(Lexer* lexer, uint32_t token_index);
+
+void lexer_debug(Lexer* lexer);
 
 void printErr(FileView file, StrRef ref, char* message);
 

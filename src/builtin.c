@@ -1,7 +1,7 @@
 #include "builtin.h"
 #include "arraylist.h"
 #include "log.h"
-#include "str.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -83,7 +83,6 @@ static bool echo(arraylist* args, int count, arraylist* out) {
 	for (int i = 0; i < count; i++) {
 		foreach (char*, param, args[i]) {
 			printf("%s ", *param);
-			//arraylist_append(out, param);
 		}
 	}
 	printf("\n");
@@ -113,10 +112,6 @@ static bool concat(arraylist* args, int count, arraylist* out) {
 
 	return true;
 }
-
-// src/*.c
-// build/*.c
-// src/main.c
 
 static char* sub(char* path, char* from, char* to) {
 	int from_len = strlen(from);

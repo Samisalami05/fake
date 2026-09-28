@@ -1,4 +1,3 @@
-#include "fake.h"
 #include "lex.h"
 
 char* token_tag_str(TokenType tag) {

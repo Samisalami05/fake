@@ -52,3 +52,5 @@ typedef struct {
 char* ast_type_cstr(AstNodeType type);
 
 bool parse_fakefile(FileView file, Tokens tokens, Ast* out);
+
+void ast_debug(Ast* ast, FileView file);

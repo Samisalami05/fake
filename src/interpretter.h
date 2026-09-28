@@ -42,4 +42,6 @@ int find_block(Interpretter* in, char* name);
 bool run_prepass(Interpretter* in);
 bool execute_block(Interpretter* in, uint32_t id);
 
+void in_debug(Interpretter* in);
+
 #endif

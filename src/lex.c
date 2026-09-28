@@ -1,6 +1,6 @@
 #include "arraylist.h"
-#include "fake.h"
 #include "file.h"
+#include "str.h"
 #include "lex.h"
 
 #include <stdint.h>
@@ -158,10 +158,6 @@ Tokens lexer_tokens(Lexer* lexer) {
 	};
 }
 
-StrRef lexer_token_str(Lexer *lexer, Token token) {
-	return lexer_token_id_str(lexer, token.index);
-}
-
 StrRef lexer_token_id_str(Lexer *lexer, uint32_t token_index) {
 	if (token_index >= lexer->tokens.count) {
 		fprintf(stderr, "ERROR in 'lex.c': token_index %u out of bounds\n", token_index);
@@ -183,6 +179,23 @@ StrRef lexer_token_id_str(Lexer *lexer, uint32_t token_index) {
 		.src = src,
 		.len = i-src,
 	};
+}
+
+void lexer_debug(Lexer* lexer) {
+	printf("\nLexer:\n");
+	for (uint32_t i = 0; i < lexer->tokens.count; i++) {
+		Token token = ((Token*)lexer->tokens.items)[i];
+
+		StrRef ref = lexer_token_id_str(lexer, i);
+		printf("%3d:%3d: %.*s", i, token.index, ref.len, lexer->file + ref.src);
+
+		char* tag = token_tag_str(token.tag);
+		if (strncmp(tag, lexer->file + ref.src, ref.len) != 0) {
+			printf(" - %s", tag);
+		}
+
+		printf("\n");
+	}
 }
 
 // Prints char n times

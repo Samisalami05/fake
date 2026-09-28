@@ -1,7 +1,9 @@
 #ifndef AST_H
 #define AST_H
 
+#include "file.h"
 #include "parse.h"
+#include <stdio.h>
 
 char* ast_type_cstr(AstNodeType type) {
 	switch (type) {
@@ -24,6 +26,31 @@ char* ast_type_cstr(AstNodeType type) {
 		case AST_NODE_AUTOVAR: return "autovar";
 	}
 	return "?";
+}
+
+static uint32_t print_node(Ast* ast, FileView file, uint32_t node, uint32_t depth) {
+	AstNode n = ast->data[node];
+	printf("%3u | ", node);
+	if (n.ref.src != UINT32_MAX) {
+		 printf("%-7.*s | ", n.ref.len, file.ptr + n.ref.src); 
+	}
+	else printf("        | ");
+
+	for (int i = 0; i < depth; i++) printf("  ");
+
+	printf("%-10s", ast_type_cstr(n.type));
+		printf("\n");
+
+	uint32_t curr = node;
+	for (int i = 0; i < n.child_count; i++) {
+		curr = print_node(ast, file, curr + 1, depth + 1);
+	}
+	return curr;
+}
+
+void ast_debug(Ast* ast, FileView file) {
+	printf("\nAst:\n");
+	print_node(ast, file, AST_ROOT, 0);
 }
 
 #endif

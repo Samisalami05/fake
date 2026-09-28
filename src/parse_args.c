@@ -29,7 +29,21 @@ void parse_args(char **argv, FakeConfig* out) {
 			out->filename = argv[i + 1];
 			i++;
 		}
+		else if (strcmp(argv[i], "--lexer") == 0) {
+			out->role = FAKE_ROLE_DEBUG;
+			out->debug_flags |= DEBUG_LEXER;
+		}
+		else if (strcmp(argv[i], "--ast") == 0) {
+			out->role = FAKE_ROLE_DEBUG;
+			out->debug_flags |= DEBUG_AST;
+		}
+		else if (strcmp(argv[i], "--blocks") == 0) {
+			out->role = FAKE_ROLE_DEBUG;
+			out->debug_flags |= DEBUG_BLOCKS;
+		}
 	}
+
+	if (out->role == FAKE_ROLE_DEBUG) return;
 
 	out->role = out->targets.count == 0 
 		? FAKE_ROLE_LIST
