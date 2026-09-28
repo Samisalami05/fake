@@ -35,6 +35,9 @@ fake --help
 ```
 To know how Fakefile works, check out examples in this codebase.
 
+# Syntax Highlighting
+* [tree-sitter](https://github.com/Samisalami05/tree-sitter-fake)
+
 # LSP support
 To get lsps to care about your fake configuration, use the 
 [bear](https://github.com/rizsotto/Bear) project like below for a 
