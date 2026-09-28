@@ -26,7 +26,7 @@ NAME = fake,
 SRCS = @find(src, "*.c"),
 OBJS = @pathsub($SRCS, "src/*.c", "build/*.o"),
 
-label build: $NAME { @echo($TEST) }
+label build: $NAME { }
 
 rule $NAME: $OBJS {
 	$CC $OBJS -o $NAME,
