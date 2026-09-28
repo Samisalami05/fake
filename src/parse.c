@@ -102,8 +102,6 @@ bool parse_fakefile(FileView file, Tokens tokens, Ast* out) {
 		if (!parse_statement(&state)) return false;
 	}
 
-	//print_node(&state.ast, file, 0, 0);
-
 	*out = state.ast;
 
 	return true;
@@ -246,22 +244,4 @@ bool parse_statement(ParseState* state) {
 	return true;
 }
 
-uint32_t print_node(Ast* ast, FileView file, uint32_t node, uint32_t depth) {
-	AstNode n = ast->data[node];
-	printf("%3u | ", node);
-	if (n.ref.src != UINT32_MAX) {
-		 printf("%-7.*s | ", n.ref.len, file.ptr + n.ref.src); 
-	}
-	else printf("        | ");
 
-	for (int i = 0; i < depth; i++) printf("  ");
-
-	printf("%-10s", ast_type_cstr(n.type));
-		printf("\n");
-
-	uint32_t curr = node;
-	for (int i = 0; i < n.child_count; i++) {
-		curr = print_node(ast, file, curr + 1, depth + 1);
-	}
-	return curr;
-}

@@ -1,5 +1,6 @@
 #include "fake.h"
 #include "parse_args.h"
+#include <stdio.h>
 
 int main(int argc, char **argv) {
 	FakeConfig conf = {0};

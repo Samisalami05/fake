@@ -18,12 +18,18 @@ bool fake_open(FakeConfig conf, Fakefile* out) {
 	out->lexer = lexer_from_file(out->file);
 	lex(&out->lexer);
 
+	if (conf.role == FAKE_ROLE_DEBUG && conf.debug_flags & DEBUG_LEXER)
+		lexer_debug(&out->lexer);
+
 	// Parsing
 	Tokens tokens = lexer_tokens(&out->lexer);
 	if (!parse_fakefile(out->file, tokens, &out->ast)) {
 		log_error("Failed to parse Fakefile");
 		return false;
 	}
+
+	if (conf.role == FAKE_ROLE_DEBUG && conf.debug_flags & DEBUG_AST)
+		ast_debug(&out->ast, out->file);
 
 	// Interpretting
 	out->in.file = out->file;
@@ -34,6 +40,10 @@ bool fake_open(FakeConfig conf, Fakefile* out) {
 		log_error("Prepass failed");
 		return false;
 	}
+
+	if (conf.role == FAKE_ROLE_DEBUG && conf.debug_flags & DEBUG_BLOCKS)
+		in_debug(&out->in);
+
 	return true;
 }
 
@@ -70,7 +80,7 @@ static bool exec_targets(Fakefile* ff) {
 
 bool fake_exec(Fakefile* ff) {
 	switch (ff->conf.role) {
-		case FAKE_ROLE_DEBUG: return debug_print(ff);
+		case FAKE_ROLE_DEBUG: return true; //debug_print(ff);
 		case FAKE_ROLE_LIST:  return list_blocks(ff);
 		case FAKE_ROLE_RUN:   return exec_targets(ff);
 	}

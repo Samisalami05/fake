@@ -1,14 +1,14 @@
 CC := cc
 NAME := fake
 
-SRCS := $(wildcard src/*.c)
+SRCS := $(wildcard src/*.c) $(wildcard src/builtins/*.c)
 OBJS := $(patsubst src/%.c,build/%.o,$(SRCS))
 
 $(NAME): $(OBJS)
 	$(CC) $(OBJS) -rdynamic -o $(NAME)
 
 build/%.o: src/%.c
-	@mkdir -p build
+	@mkdir -p build build/builtins
 	$(CC) -Wall -ggdb -finstrument-functions -c $< -o $@
 
 .PHONY: run clean install uninstall

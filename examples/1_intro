@@ -1,0 +1,8 @@
+// This is a comment
+/* This is also a comment */
+
+
+// is executed by running 'fake run'
+label run {
+	@echo("Running"),
+}

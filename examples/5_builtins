@@ -1,0 +1,15 @@
+// Under construction
+
+/*
+ *	@os()
+ *	@arch()
+ *	@env()
+ *
+ *	@if(expr..., true, false)
+ * 	
+ *	@echo(values...)
+ *	@find(dirs, patterns)
+ * 	@concat(src, add)
+ *	@pathsub(src, from, to)
+ *	@mkdir(paths)
+ */

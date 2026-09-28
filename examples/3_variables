@@ -1,0 +1,15 @@
+// This is a variable
+VAR = hello,
+
+// Variables is just a list of text chunks
+VAR2 = hello world,
+
+// Expressions can also be written as strings
+VAR3 = "string with spaces",
+
+CMD = echo "hello world"
+
+// Variables can also be used in blocks
+label run {
+	$CMD
+}

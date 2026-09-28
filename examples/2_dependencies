@@ -1,0 +1,12 @@
+// When running 'fake run', the dep label
+// will be executed before because its a
+// dependencies of run.
+
+
+label run: dep {
+	@echo("last"),
+}
+
+label dep {
+	@echo("first"),
+}

@@ -1,8 +1,10 @@
 #include "interpretter.h"
+#include "arraylist.h"
 #include "builtin.h"
 #include "log.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -65,6 +67,60 @@ int process_cmd(Interpretter* in, int node, arraylist* out, char* target) {
 			case AST_NODE_BUILTIN: {
 				char* name = file_str_ref(in->file, child.ref);
 				pos++;
+
+				// Lazy evaluation for @if() builtin
+				if (strcmp(name, "if") == 0) {
+					if (child.child_count < 2) {
+						log_error("@if(): Expects atleast two arguments, got %d", child.child_count);
+						return -1;
+					}
+
+					int expr_count = child.child_count == 2 
+						? child.child_count - 1
+						: child.child_count - 2;
+
+
+					bool equals = true;
+
+					arraylist values = arraylist_new(sizeof(char*));
+					for (int i = 0; i < expr_count; i++) {
+						arraylist_clear(&values);
+						pos = process_cmd(in, pos, &values, target);
+						if (pos == -1) return -1;
+
+
+						char* first = ((char**)values.items)[0];
+						if (values.count == 1) {
+							if (strcmp(first, "true") != 0)
+								equals = false;
+							continue;
+						}
+
+						for (int j = 1; j < values.count; j++) {
+							char* other = ((char**)values.items)[j];
+							if (strcmp(first, other) != 0) {
+								equals = false;
+								break;
+							}
+						}
+					}
+
+					if (equals) {
+						pos = process_cmd(in, pos, out, target);
+						if (pos == -1) return -1;
+						pos = skip_cmd(in->ast, pos);
+						if (pos == -1) return -1;
+					}
+					else if (child.child_count > 2) {
+						pos = skip_cmd(in->ast, pos);
+						if (pos == -1) return -1;
+						pos = process_cmd(in, pos, out, target);
+						if (pos == -1) return -1;
+					}
+
+					break;
+				}
+
 				arraylist args[child.child_count];
 				for (int i = 0; i < child.child_count; i++) {
 					args[i] = arraylist_new(sizeof(char*));

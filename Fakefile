@@ -17,21 +17,23 @@
 // @pathsub()
 // @substr()
 // @env()
-// @silent()
+// @silent()            # Executes given commands without printing
 // @combine(var, sep)
+// @option(msg, opts)   # Displays an option list
 
 CC = cc,
+NAME = fake,
 SRCS = @find(src, "*.c"),
 OBJS = @pathsub($SRCS, "src/*.c", "build/*.o"),
 
-label build: fake {}
+label build: $NAME { @echo($TEST) }
 
-rule fake: $OBJS {
-	$CC $OBJS -o fake
+rule $NAME: $OBJS {
+	$CC $OBJS -o $NAME,
 }
 
 multi $OBJS: $SRCS {
-	@mkdir(build),
+	@mkdir(build build/builtins),
 	$CC $deps -c -o $name
 }
 

@@ -167,8 +167,18 @@ StrRef lexer_token_id_str(Lexer *lexer, uint32_t token_index) {
 	uint32_t src = ((Token*)lexer->tokens.items)[token_index].index;
 	uint32_t dst = ((Token*)lexer->tokens.items)[token_index+1].index;
 
+
+	bool is_str = ((Token*)lexer->tokens.items)[token_index].tag == TOKEN_STRING;
+
 	int i; // new dst
-	for (i = src; i < dst; i++) {
+	for (i = is_str ? src + 1 : src; i < dst; i++) {
+		if (is_str) {
+			if (lexer->file[i] == '"') {
+				i++; // Include ending '"'
+				break;
+			}
+			continue;
+		}
 		// synchronize with tokenless characters!
 		if (lexer->file[i] == ' ') break;
 		if (lexer->file[i] == '\t') break;
