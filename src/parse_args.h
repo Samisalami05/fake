@@ -1,4 +1,5 @@
 #pragma once
+#include "arraylist.h"
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -8,17 +9,15 @@
  * Using arguments, users can set flags, decide what target to execute and get help
  */
 
-
-/* TODO: when more has been made, support storing configuration and flags
 typedef enum {
-	fake_role_build, // default, build everything
-	fake_role_help, // show help messages
-} fake_role;
+	FAKE_ROLE_RUN,   // default, run the targets
+	FAKE_ROLE_LIST,  // list all labels
+} FakeRole;
 
 typedef struct {
-	fake_role role;
-	// ...
-} fake_config ;
-*/
+	FakeRole role;
+	char* filename;
+	arraylist targets;
+} FakeConfig;
 
-bool parse_args(char **argv);
+void parse_args(char **argv, FakeConfig* out);

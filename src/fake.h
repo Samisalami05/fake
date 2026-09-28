@@ -1,24 +1,26 @@
-#pragma once
-#include "arraylist.h"
-#include "str.h"
+#ifndef FAKE_H
+#define FAKE_H
+
+#include "file.h"
+#include "interpretter.h"
+#include "lex.h"
+#include "parse_args.h"
 
 // TODO: arena allocator!
 
 #include <stdint.h>
 
-typedef enum {
-	BLOCK_LABEL,
-	BLOCK_RULE
-} BlockType;
-
 typedef struct {
-	char* name;
-	uint32_t node;
-	BlockType type;
-	arraylist deps; // of allocated char*
-} Block;
+	FakeConfig conf;
 
-typedef struct {
-	arraylist variables; // of Variable
-	arraylist labels; // of Label
+	FileView file;
+	Lexer lexer;
+	Ast ast;
+	Interpretter in;
 } Fakefile;
+
+bool fake_open(FakeConfig conf, Fakefile* out);
+bool fake_exec(Fakefile* ff);
+void fake_close(Fakefile* ff);
+
+#endif

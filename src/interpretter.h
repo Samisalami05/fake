@@ -6,6 +6,18 @@
 #include "lex.h"
 #include "parse.h"
 
+typedef enum {
+	BLOCK_LABEL,
+	BLOCK_RULE
+} BlockType;
+
+typedef struct {
+	char* name;
+	uint32_t node;
+	BlockType type;
+	arraylist deps; // of allocated char*
+} Block;
+
 typedef struct {
 	struct {
 		char* key;

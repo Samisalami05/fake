@@ -15,6 +15,7 @@ char* token_tag_str(TokenType tag) {
 		case TOKEN_EQUALS: return "=";
 		case TOKEN_DOLLAR: return "$";
 		case TOKEN_AT_SIGN: return "@";
+		case TOKEN_HASHTAG: return "#";
 	}
 	return "Unknown";
 }
