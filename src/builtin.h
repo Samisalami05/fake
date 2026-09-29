@@ -20,6 +20,7 @@ bool builtin_dirname(arraylist* args, int count, arraylist* out);
 bool builtin_store(arraylist* args, int count, arraylist* out);
 bool builtin_read(arraylist* args, int count, arraylist* out);
 bool builtin_stored(arraylist* args, int count, arraylist* out);
+bool builtin_option(arraylist* args, int count, arraylist* out);
 
 bool exec_builtin(const char* name, arraylist* args, int count, arraylist* out);
 

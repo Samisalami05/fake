@@ -20,11 +20,16 @@
 // @silent()            # Executes given commands without printing
 // @combine(var, sep)
 // @option(msg, opts)   # Displays an option list
+// @list()
 
 CC = cc,
 NAME = fake,
 SRCS = @find(src, "*.c"),
 OBJS = @pathsub($SRCS, "src/*.c", "build/*.o"),
+
+CHOICE = @option("/usr/bin" "/usr/local/bin" "other"),
+w_ = @echo($CHOICE),
+PATH = @if($CHOICE "other", @input(), $CHOICE),
 
 w_ = @if(@stored("cc") false,
 	@store("cc", @prompt("use gcc?", "gcc", "clangd"))

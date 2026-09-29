@@ -22,5 +22,6 @@ bool exec_builtin(const char* name, arraylist* args, int count, arraylist* out) 
 	else if (strcmp(name, "store") == 0)    return builtin_store(args, count, out);
 	else if (strcmp(name, "read") == 0)     return builtin_read(args, count, out);
 	else if (strcmp(name, "stored") == 0)   return builtin_stored(args, count, out);
+	else if (strcmp(name, "option") == 0)   return builtin_option(args, count, out);
 	return false;
 }
