@@ -12,7 +12,7 @@ int main(int argc, char **argv) {
 	
 	if (!fake_exec(&ff))
 		return 1;
-
+	
 	fake_close(&ff);
 	return 0;
 }

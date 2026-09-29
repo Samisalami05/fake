@@ -46,12 +46,25 @@ static void lex_identifier(Lexer* lexer) {
 }
 
 static bool lex_comment(Lexer* lexer) {
+	char type = lexer->file[lexer->pos+1];
+
 	// safe, file str always ends with 0!
-	if (lexer->file[lexer->pos+1] == '/') {
-		lexer->pos += 1;
+	if (type == '/') {
+		lexer->pos += 2;
 		for (; lexer->pos < lexer->file_size; lexer->pos++) {
 			if (curr(lexer) == '\n') break;
 		}
+		lexer->pos++;
+		return true;
+	}
+	else if (type == '*') {
+		lexer->pos += 2;
+		char last = 0;
+		for (; lexer->pos < lexer->file_size; lexer->pos++) {
+			if (last == '*' && curr(lexer) == '/') break;
+			last = curr(lexer);
+		}
+		lexer->pos++;
 		return true;
 	}
 	return false;
@@ -166,7 +179,6 @@ StrRef lexer_token_id_str(Lexer *lexer, uint32_t token_index) {
 
 	uint32_t src = ((Token*)lexer->tokens.items)[token_index].index;
 	uint32_t dst = ((Token*)lexer->tokens.items)[token_index+1].index;
-
 
 	bool is_str = ((Token*)lexer->tokens.items)[token_index].tag == TOKEN_STRING;
 

@@ -228,18 +228,26 @@ bool parse_var_decl(ParseState* state) {
 }
 
 bool parse_statement(ParseState* state) {
-	if (!expect_token(state, TOKEN_IDENTIFIER)) return false;
-	state->curr++;
-
-	TokenType tag = curr_token(state).tag;
-	state->curr--;
-	switch (tag) {
-		case TOKEN_EQUALS:
+	if (curr_token(state).tag == TOKEN_IDENTIFIER) {
+		StrRef ref = get_token_id_str(state, state->curr);
+		state->curr++;
+		TokenType tag = curr_token(state).tag;
+		state->curr--;
+		if (tag == TOKEN_EQUALS) {
 			if (!parse_var_decl(state)) return false;
-			break;
-		default:
+			return true;
+		}
+		else if (str_equals(state->file.ptr, ref, "label")
+			|| str_equals(state->file.ptr, ref, "rule")
+			|| str_equals(state->file.ptr, ref, "multi"))
+		{
 			if (!parse_decl(state)) return false;
+			return true;
+		}
 	}
+
+	if (!parse_command(state, AST_ROOT, AST_NODE_CMD)) return false;
+	state->curr++;
 
 	return true;
 }

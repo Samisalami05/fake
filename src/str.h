@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 // str that references part of a cstr
 typedef struct {
@@ -12,6 +13,8 @@ typedef struct {
 
 char* str_cstr(const char* src, StrRef str);
 int str_contains(const char* src, StrRef str, char c);
+bool str_equals(const char* src, StrRef ref, char* other);
+
 
 // TODO: use this
 typedef struct {

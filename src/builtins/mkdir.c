@@ -7,6 +7,7 @@
 
 int mkdir_p(char *path, mode_t mode)
 {
+	int ret = 0;
     size_t len = strlen(path);
 
     for (char *p = path + 1; *p; p++) {
@@ -14,14 +15,14 @@ int mkdir_p(char *path, mode_t mode)
             *p = '\0';
 
             if (mkdir(path, mode) != 0)
-				return -1;
+				ret = -1;
 
             *p = '/';
         }
     }
 
     if (mkdir(path, mode) != 0)
-		return -1;
+		ret = -1;
 
     return 0;
 }
@@ -35,7 +36,9 @@ bool builtin_mkdir(arraylist* args, int count, arraylist* out) {
 	arraylist paths = args[0];
 
 	foreach (char*, path, paths) {
-		mkdir_p(*path, 0755);
+		if (mkdir_p(*path, 0755) == -1) {
+			perror("@mkdir()");
+		}
 	}
 
 	return true;

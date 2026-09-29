@@ -17,3 +17,9 @@ int str_contains(const char* src, StrRef str, char c) {
 	}
 	return count;
 }
+
+bool str_equals(const char* src, StrRef ref, char* other) {
+	int len = strlen(other);
+	if (len != ref.len) return false;
+	return memcmp(src + ref.src, other, len) == 0;
+}

@@ -1,4 +1,5 @@
 #include "fake.h"
+#include "cache.h"
 #include "interpretter.h"
 #include "lex.h"
 #include "log.h"
@@ -30,6 +31,8 @@ bool fake_open(FakeConfig conf, Fakefile* out) {
 
 	if (conf.role == FAKE_ROLE_DEBUG && conf.debug_flags & DEBUG_AST)
 		ast_debug(&out->ast, out->file);
+
+	cache_parse();
 
 	// Interpretting
 	out->in.file = out->file;
@@ -89,5 +92,6 @@ bool fake_exec(Fakefile* ff) {
 }
 
 void fake_close(Fakefile* ff) {
+	cache_save();
 	close_file(ff->file);
 }

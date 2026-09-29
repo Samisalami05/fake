@@ -20,9 +20,7 @@ bool builtin_os(arraylist* args, int count, arraylist* out) {
 	os = "macos";
 #elif __linux__
     os = "linux";
-#elif __unix__
-    os = "unix";
-#elif defined(_POSIX_VERSION)
+#elif defined(_POSIX_VERSION) || __unix__
     os = "posix";
 #else
 #   error "Unknown compiler"

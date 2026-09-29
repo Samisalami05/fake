@@ -26,9 +26,15 @@ NAME = fake,
 SRCS = @find(src, "*.c"),
 OBJS = @pathsub($SRCS, "src/*.c", "build/*.o"),
 
-TEST = @dirname("src/main.c"),
+w_ = @if(@stored("cc") false,
+	@store("cc", @prompt("use gcc?", "gcc", "clangd"))
+),
+CC = @read("cc"),
 
-label build: $NAME { }
+w_ = @echo($CC),
+
+
+label build: $NAME {}
 
 rule $NAME: $OBJS {
 	$CC $OBJS -o $NAME,
