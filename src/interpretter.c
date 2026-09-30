@@ -413,6 +413,9 @@ void in_debug(Interpretter* in) {
 			printf("\e[38;5;243m%s\e[0m ", *dep);
 		}
 		printf("(%d)", block.node);
+
+		if (block.type == BLOCK_RULE)
+			printf(" \e[38;5;243m%s\e[0m", should_execute(in, id) ? "old" : "up to date");
 		printf("\n");
 	}
 	printf("\n");
