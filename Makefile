@@ -4,12 +4,15 @@ NAME := fake
 SRCS := $(wildcard src/*.c) $(wildcard src/builtins/*.c)
 OBJS := $(patsubst src/%.c,build/%.o,$(SRCS))
 
+LDFLAGS := -lncursesw -rdynamic
+CFLAGS := -Wall -ggdb -finstrument-functions
+
 $(NAME): $(OBJS)
-	$(CC) $(OBJS) -rdynamic -o $(NAME)
+	$(CC) $(OBJS) -o $(NAME) $(LDFLAGS)
 
 build/%.o: src/%.c
 	@mkdir -p build build/builtins
-	$(CC) -Wall -ggdb -finstrument-functions -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 .PHONY: run clean install uninstall
 

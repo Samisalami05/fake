@@ -27,7 +27,10 @@ NAME = fake,
 SRCS = @find(src, "*.c"),
 OBJS = @pathsub($SRCS, "src/*.c", "build/*.o"),
 
-CHOICE = @option("/usr/bin" "/usr/local/bin" "other"),
+LDFLAGS = -lncursesw -rdynamic,
+CFLAGS = -Wall -ggdb -finstrument-functions,
+
+CHOICE = @option("Where should it be installed?", "/usr/bin" "/usr/local/bin" "other"),
 w_ = @echo($CHOICE),
 PATH = @if($CHOICE "other", @input(), $CHOICE),
 
@@ -42,12 +45,12 @@ w_ = @echo($CC),
 label build: $NAME {}
 
 rule $NAME: $OBJS {
-	$CC $OBJS -o $NAME,
+	$CC $OBJS -o $NAME $LDFLAGS,
 }
 
 multi $OBJS: $SRCS {
 	@mkdir(@dirname($name)),
-	$CC $deps -c -o $name
+	$CC $deps $CFLAGS -c -o $name
 }
 
 label clean {
@@ -57,4 +60,8 @@ label clean {
 
 label run {
 	./fake
+}
+
+label install {
+	PATH = 
 }
