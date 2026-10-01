@@ -314,14 +314,20 @@ bool should_execute(Interpretter* in, uint32_t id) {
     if (stat(block.name, &target) != 0)
         return true;
 
-    foreach (char*, dep_name, block.deps) {
+    foreach (char*, dep, block.deps) {
         struct stat dep_stat;
 
-        if (stat(*dep_name, &dep_stat) != 0)
+        if (stat(*dep, &dep_stat) != 0)
             return true;
 
-        if (dep_stat.st_mtime > target.st_mtime)
+		struct timespec dep_time = dep_stat.st_mtim;
+		struct timespec target_time = target.st_mtim;
+
+        if (dep_time.tv_sec > target_time.tv_sec
+				|| (dep_time.tv_sec == target_time.tv_sec
+				&& dep_time.tv_nsec > target_time.tv_nsec))
             return true;
+
     }
 
     return false;
@@ -412,7 +418,7 @@ void in_debug(Interpretter* in) {
 		foreach (char*, dep, block.deps) {
 			printf("\e[38;5;243m%s\e[0m ", *dep);
 		}
-		printf("(%d)", block.node);
+		printf("(%u:%u)", id, block.node);
 
 		if (block.type == BLOCK_RULE)
 			printf(" \e[38;5;243m%s\e[0m", should_execute(in, id) ? "old" : "up to date");

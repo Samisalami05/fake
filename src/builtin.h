@@ -12,6 +12,7 @@ bool builtin_env(arraylist* args, int count, arraylist* out);
 bool builtin_find(arraylist* args, int count, arraylist* out);
 bool builtin_echo(arraylist* args, int count, arraylist* out);
 bool builtin_concat(arraylist* args, int count, arraylist* out);
+bool builtin_repeat(arraylist* args, int count, arraylist* out);
 bool builtin_pathsub(arraylist* args, int count, arraylist* out);
 bool builtin_mkdir(arraylist* args, int count, arraylist* out);
 bool builtin_prompt(arraylist* args, int count, arraylist* out);

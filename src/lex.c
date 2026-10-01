@@ -114,10 +114,7 @@ void lex(Lexer* lexer) {
 
 		if (c == '/' && lex_comment(lexer)) continue;
 
-		if ((c >= 'a' && c <= 'z') ||
-			(c >= 'A' && c <= 'Z') ||
-			 c == '-' || c == '/'  ||
-			 c == '.' || c == '*') {
+		if (identifier_map[c]) {
 			lex_identifier(lexer);
 			continue;
 		}

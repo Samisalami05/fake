@@ -20,7 +20,7 @@
 // @silent()            # Executes given commands without printing
 // @combine(var, sep)
 // @option(msg, opts)   # Displays an option list
-// @list()
+// @selection()
 
 CC = cc,
 NAME = fake,
@@ -30,21 +30,13 @@ OBJS = @pathsub($SRCS, "src/*.c", "build/*.o"),
 LDFLAGS = -lncursesw -rdynamic,
 CFLAGS = -Wall -ggdb -finstrument-functions,
 
-CHOICE = @option("Where should it be installed?", "/usr/bin" "/usr/local/bin" "other"),
-w_ = @echo($CHOICE),
-PATH = @if($CHOICE "other", @input(), $CHOICE),
+// @if(expr..., if_true, if_false)
 
-w_ = @if(@stored("cc") false,
-	@store("cc", @prompt("use gcc?", "gcc", "clangd"))
-),
-CC = @read("cc"),
-
-w_ = @echo($CC),
-
+WOW = @if(@option("Pick one", @repeat("ayo", 20)) "ayo", "wow", "no"),
 
 label build: $NAME {}
 
-rule $NAME: $OBJS {
+rule $NAME: $SRCS $OBJS {
 	$CC $OBJS -o $NAME $LDFLAGS,
 }
 
@@ -60,8 +52,4 @@ label clean {
 
 label run {
 	./fake
-}
-
-label install {
-	PATH = 
 }
