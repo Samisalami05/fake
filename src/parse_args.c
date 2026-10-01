@@ -1,5 +1,6 @@
 #include "parse_args.h"
 #include "arraylist.h"
+#include "cache.h"
 #include "log.h"
 
 #include <string.h>
@@ -40,6 +41,14 @@ void parse_args(char **argv, FakeConfig* out) {
 		else if (strcmp(argv[i], "--blocks") == 0) {
 			out->role = FAKE_ROLE_DEBUG;
 			out->debug_flags |= DEBUG_BLOCKS;
+		}
+		else if (strcmp(argv[i], "--clear-cache") == 0) {
+			cache_save();
+			goto exit;
+		}
+		else {
+			log_error("Unknown flag %s\n", arg);
+			goto err;
 		}
 	}
 

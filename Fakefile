@@ -30,10 +30,6 @@ OBJS = @pathsub($SRCS, "src/*.c", "build/*.o"),
 LDFLAGS = -lncursesw -rdynamic,
 CFLAGS = -Wall -ggdb -finstrument-functions,
 
-// @if(expr..., if_true, if_false)
-
-WOW = @if(@option("Pick one", @repeat("ayo", 20)) "ayo", "wow", "no"),
-
 label build: $NAME {}
 
 rule $NAME: $SRCS $OBJS {
@@ -52,4 +48,15 @@ label clean {
 
 label run {
 	./fake
+}
+
+label install {
+	sudo cp fake @if(@stored("INSTALL_DIR"),
+		@read("INSTALL_DIR"),
+		@store("INSTALL_DIR", @option(
+			"Where do you want to install it?",
+			"/usr/bin" "/usr/local/bin"
+		))
+		@read("INSTALL_DIR")
+	)
 }

@@ -5,27 +5,42 @@
 #include "../log.h"
 #include <ncurses.h>
 
+#define SCROLL_PADDING 4
+
 // TODO: fix scrolling if list is longer than the screen height
+
+static int s = 0;
 
 void render(arraylist options, int pos, char *msg) {
     erase();
 
-    int max_y, max_x;
-    getmaxyx(stdscr, max_y, max_x);
+    int h, w;
+    getmaxyx(stdscr, h, w);
 
-    int start_y = (max_y - options.count) / 2;
+	int start = 3;
+
+	if (pos > s + h - start - SCROLL_PADDING) {
+		s = pos - h + start + SCROLL_PADDING;
+	}
+	else if (pos < s - start + SCROLL_PADDING) {
+		s = pos + start - SCROLL_PADDING;
+		if (s < 0) s = 0;
+	}
+
 
 	if (msg != NULL) {
 		// Header
 		attron(A_BOLD | COLOR_PAIR(2));
-		mvprintw(start_y - 2, 2, "%s", msg);
+		mvprintw(start - s - 2, 2, "%s", msg);
 		attroff(A_BOLD | COLOR_PAIR(2));
 	}
 
     // Options
     for (int i = 0; i < options.count; i++) {
         char *opt = ((char **)options.items)[i];
-        int y = start_y + i;
+        int y = i - s + start;
+
+		if (y < 0 || y >= h - 2) continue;
 
         if (i == pos) {
             attron(A_BOLD | COLOR_PAIR(1));
@@ -36,12 +51,16 @@ void render(arraylist options, int pos, char *msg) {
         }
     }
 
+	int y = start + options.count + 1 < h - 1 ? start + options.count + 1 : h - 1;
+
+	mvprintw(y, 2, "%4d/%-4ld", pos + 1, options.count);
+
     attron(A_BOLD | COLOR_PAIR(3));
-	mvprintw(start_y + options.count + 1, 2, "Select (\\n)");
+	mvprintw(y, 13, "Select (\\n)");
     attroff(A_BOLD | COLOR_PAIR(3));
 
     attron(A_BOLD | COLOR_PAIR(4));
-	mvprintw(start_y + options.count + 1, 15, "Exit (q)");
+	mvprintw(y, 26, "Exit (q)");
     attroff(A_BOLD | COLOR_PAIR(4));
 
     refresh();
@@ -85,7 +104,7 @@ bool builtin_option(arraylist* args, int count, arraylist* out) {
 			if (pos > 0) pos--;
 		}
 		else if (c == KEY_DOWN) {
-			if (pos < options.count - 1) pos++;
+			if (pos < (int64_t)options.count - 1) pos++;
 		}
 
 		render(options, pos, msg);
@@ -95,7 +114,8 @@ bool builtin_option(arraylist* args, int count, arraylist* out) {
 		log_info("Exiting options menu");
 		return false;
 	}
-	arraylist_append(out, options.items + pos * options.item_size);
+	if (options.count != 0)
+		arraylist_append(out, options.items + pos * options.item_size);
 	
 	endwin();
 	return true;
