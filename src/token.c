@@ -1,6 +1,6 @@
 #include "lex.h"
 
-char* token_tag_str(TokenType tag) {
+char* token_tag_str(TokenTag tag) {
 	switch (tag) {
 		case TOKEN_IDENTIFIER: return "Identifier";
 		case TOKEN_COLON: return ":";

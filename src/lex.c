@@ -11,15 +11,15 @@
 
 static uint8_t identifier_map[256] = {0};
 
-static void append_token_from(Lexer* lexer, TokenType type, uint32_t index) {
+static void append_token_from(Lexer* lexer, TokenTag tag, uint32_t index) {
 	arraylist_append(&lexer->tokens, &(Token){
-		.tag = type,
+		.tag = tag,
 		.index = index,
 	});
 }
 
-static void append_token(Lexer* lexer, TokenType type) {
-	append_token_from(lexer, type, lexer->pos);
+static void append_token(Lexer* lexer, TokenTag tag) {
+	append_token_from(lexer, tag, lexer->pos);
 }
 
 
@@ -32,8 +32,8 @@ static char curr(Lexer* lexer) {
 }
 
 // Takes the current character and makes it into token and increments curr
-static void lex_single(Lexer* lexer, TokenType type) {
-	append_token(lexer, type);
+static void lex_single(Lexer* lexer, TokenTag tag) {
+	append_token(lexer, tag);
 	lexer->pos++;
 }
 
@@ -46,10 +46,10 @@ static void lex_identifier(Lexer* lexer) {
 }
 
 static bool lex_comment(Lexer* lexer) {
-	char type = lexer->file[lexer->pos+1];
+	char tag = lexer->file[lexer->pos+1];
 
 	// safe, file str always ends with 0!
-	if (type == '/') {
+	if (tag == '/') {
 		lexer->pos += 2;
 		for (; lexer->pos < lexer->file_size; lexer->pos++) {
 			if (curr(lexer) == '\n') break;
@@ -57,7 +57,7 @@ static bool lex_comment(Lexer* lexer) {
 		lexer->pos++;
 		return true;
 	}
-	else if (type == '*') {
+	else if (tag == '*') {
 		lexer->pos += 2;
 		char last = 0;
 		for (; lexer->pos < lexer->file_size; lexer->pos++) {
@@ -114,7 +114,7 @@ void lex(Lexer* lexer) {
 
 		if (c == '/' && lex_comment(lexer)) continue;
 
-		if (identifier_map[c]) {
+		if (identifier_map[(uint8_t)c]) {
 			lex_identifier(lexer);
 			continue;
 		}
@@ -137,13 +137,16 @@ void lex(Lexer* lexer) {
 			case ' ':
 			case '\t':
 			case '\n':
+			case '\0': // TODO: this might be bad, temporary fix for windows
 				lexer->pos++;
 				break;
+
 		
 			default: {
 				printErr(lexer_get_view(lexer),
-				(StrRef){lexer->pos, 1}, 
-				"illegal character");
+					(StrRef){lexer->pos, 1}, 
+					"illegal character"
+				);
 				exit(1);
 			};
 		}
@@ -236,7 +239,7 @@ void printErr(FileView file, StrRef ref, char* message) {
 	uint64_t end = file_line_end(file, index);
 	uint64_t len = end - start;
 
-	fprintf(stderr, "%u:%lu: \e[1;91merror:\e[0m %s\n", 0, index - start, message);
+	fprintf(stderr, "%u:%llu: \e[1;91merror:\e[0m %s\n", 0, index - start, message);
 	
 	uint64_t tab_count = 0;
 	for (uint64_t i = start; i < end; i++) {

@@ -21,12 +21,12 @@ typedef enum {
 	TOKEN_DOLLAR,
 	TOKEN_AT_SIGN,
 	TOKEN_HASHTAG
-} TokenType;
+} TokenTag;
 
-char* token_tag_str(TokenType tag);
+char* token_tag_str(TokenTag tag);
 
 typedef struct {
-	TokenType tag;
+	TokenTag tag;
 	uint32_t index;
 } Token;
 

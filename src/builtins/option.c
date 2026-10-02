@@ -3,11 +3,14 @@
 #include <string.h>
 #include "../arraylist.h"
 #include "../log.h"
+
+#ifndef _WIN32
 #include <ncurses.h>
+#endif
+
+#ifndef _WIN32
 
 #define SCROLL_PADDING 4
-
-// TODO: fix scrolling if list is longer than the screen height
 
 static int s = 0;
 
@@ -66,12 +69,17 @@ void render(arraylist options, int pos, char *msg) {
     refresh();
 }
 
+#endif
 
 bool builtin_option(arraylist* args, int count, arraylist* out) {
 	if (count != 1 && count != 2) {
 		log_error("@prompt(): Expected 1 or 2 arguments, got %d", count);
 		return false;
 	}
+
+#ifdef _WIN32
+	return true; // TODO: Implement this function for windows
+#else
 
 	char* msg = NULL;
 	if (count == 2) {
@@ -118,5 +126,6 @@ bool builtin_option(arraylist* args, int count, arraylist* out) {
 		arraylist_append(out, options.items + pos * options.item_size);
 	
 	endwin();
+#endif
 	return true;
 }

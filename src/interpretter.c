@@ -5,9 +5,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#ifdef _WIN32
+#include <windows.h>
+#else
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#endif
 
 #define STB_DS_IMPLEMENTATION
 #include "stb_ds.h"
@@ -310,6 +315,10 @@ bool should_execute(Interpretter* in, uint32_t id) {
 
     if (block.type == BLOCK_LABEL) return true;
 
+#ifdef _WIN32
+	// TODO: Implement this function for windows
+	return true;
+#else
     struct stat target;
     if (stat(block.name, &target) != 0)
         return true;
@@ -329,8 +338,48 @@ bool should_execute(Interpretter* in, uint32_t id) {
             return true;
 
     }
+#endif
 
     return false;
+}
+
+bool execute_args(char** args) {
+#ifdef _WIN32
+	STARTUPINFO si = { sizeof(si) };
+	PROCESS_INFORMATION pi;
+
+	if (!CreateProcess(NULL, args[0], NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
+		log_perror("Failed to execute program %s", args[0]);
+		return false;
+	}
+
+	WaitForSingleObject(pi.hProcess, INFINITE);
+	DWORD exit_code;
+	GetExitCodeProcess(pi.hProcess, &exit_code);
+
+	CloseHandle(pi.hProcess);
+	CloseHandle(pi.hThread);
+
+	if (exit_code != 0) {
+		log_error("Child process exited with status %lu", exit_code);
+		return false;
+	}
+#else
+	pid_t pid = fork();
+	if (pid == 0) {
+		execvp(*args, args);
+		log_perror("Failed to execute program %s", *args);
+		exit(1);
+	} else if (pid > 0) {
+		int status = 0;
+		waitpid(pid, &status, 0); // wait for execvp to finish
+		if (WIFEXITED(status) && WEXITSTATUS(status) != 0) {
+			log_error("Child process exited with status %d", WEXITSTATUS(status));
+			return false;
+		}
+	}
+#endif
+	return true;
 }
 
 bool execute_block(Interpretter* in, uint32_t id) {
@@ -377,19 +426,8 @@ bool execute_block(Interpretter* in, uint32_t id) {
 
 				char** args = (char**)arglist.items;
 
-				pid_t pid = fork();
-				if (pid == 0) {
-					execvp(*args, args);
-					log_perror("Failed to execute program %s", *args);
-					exit(1);
-				} else if (pid > 0) {
-					int status = 0;
-					waitpid(pid, &status, 0); // wait for execvp to finish
-					if (WIFEXITED(status) && WEXITSTATUS(status) != 0) {
-						log_error("Child process exited with status %d", WEXITSTATUS(status));
-						return false;
-					}
-				}
+				if (!execute_args(args))
+					return false;
 				break;
 			}
 			default:

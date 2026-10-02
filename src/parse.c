@@ -49,7 +49,7 @@ void parse_error(ParseState* state, char* fmt, ...) {
 	log_file(LOG_ERROR, state->file, ref, msg);
 }
 
-bool expect_token(ParseState* state, TokenType token) {
+bool expect_token(ParseState* state, TokenTag token) {
 	if (curr_token(state).tag != token) { 
 		char* expected = token_tag_str(token);
 		char* got = token_tag_str(curr_token(state).tag);
@@ -108,7 +108,7 @@ bool parse_fakefile(FileView file, Tokens tokens, Ast* out) {
 }
 
 bool parse_simple_expr(ParseState* state, uint32_t dest) {
-	TokenType tag = curr_token(state).tag;
+	TokenTag tag = curr_token(state).tag;
 	switch (tag) {
 		case TOKEN_IDENTIFIER:
 			add_node_single(state, dest, AST_NODE_IDENTIFIER, state->curr);
@@ -231,7 +231,7 @@ bool parse_statement(ParseState* state) {
 	if (curr_token(state).tag == TOKEN_IDENTIFIER) {
 		StrRef ref = get_token_id_str(state, state->curr);
 		state->curr++;
-		TokenType tag = curr_token(state).tag;
+		TokenTag tag = curr_token(state).tag;
 		state->curr--;
 		if (tag == TOKEN_EQUALS) {
 			if (!parse_var_decl(state)) return false;

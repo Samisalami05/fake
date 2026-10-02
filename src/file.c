@@ -6,21 +6,40 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
+
+#ifndef _WIN32
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#endif
 
 bool read_file(const char* path, FileView* out) {
-	if (!out) {
-		log_error("read_file(): Could not read file %s: 'FileView* out' param is NULL\n", path);
+	assert(out != NULL);
+
+#ifdef _WIN32
+	FILE* fp = fopen(path, "r");
+	if (!fp) return false;
+
+	fseek(fp, 0, SEEK_END);
+	size_t size = ftell(fp);
+	fseek(fp, 0, SEEK_SET);
+
+	out->ptr = malloc(size);
+	if (!out->ptr) {
+		log_perror("read_file() - malloc");
+		fclose(fp);
 		return false;
 	}
 
+	out->size = size - 1;
+
+	fread(out->ptr, 1, size - 1, fp);
+	fclose(fp);
+
+#else
 	int fd = open(path, O_RDONLY);
-	if (fd == -1) {
-		log_perror("read_file() - open: Could not open '%s'", path);
-		return false;
-	}
+	if (fd == -1) return false;
 
 	struct stat st;
 	if (fstat(fd, &st) == -1) {
@@ -44,13 +63,19 @@ bool read_file(const char* path, FileView* out) {
 		close(fd);
 		return false;
 	}
+#endif
 
 	return true;
 }
 
 void close_file(FileView file) {
     if (!file.ptr || file.size <= 0) return;
+
+#ifdef _WIN32
+	free(file.ptr);
+#else
 	munmap(file.ptr, file.size);
+#endif
 }
 
 uint64_t file_line_num(FileView file, uint64_t index) {

@@ -1,24 +1,34 @@
-#include <stdbool.h>
 #include "../arraylist.h"
 #include "../log.h"
 
-#include <dirent.h>
-#include <fnmatch.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+
+#ifndef _WIN32
 #include <sys/stat.h>
+#include <dirent.h>
+#include <fnmatch.h>
+#endif
 
 static bool match(char* str, arraylist patterns) {
+#ifdef _WIN32
+	return true; // TODO: Implement this function for windows
+#else
 	if (patterns.count == 0) return true;
 	foreach (char*, pattern, patterns) {
 		if (fnmatch(*pattern, str, 0) == 0) {
 			return true;
 		}
 	}
+#endif
 	return false;
 }
 
 static bool find_rec(char* dir_name, arraylist patterns, arraylist* out) {
+#ifdef _WIN32
+	return true; // TODO: Implement this function for windows
+#else
 	DIR* dir = opendir(dir_name);
 	if (!dir) {
 		return false;
@@ -58,6 +68,7 @@ static bool find_rec(char* dir_name, arraylist patterns, arraylist* out) {
 	}
 
 	closedir(dir);
+#endif
 	return true;
 }
 
