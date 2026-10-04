@@ -4,71 +4,85 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
+#include "../file.h"
+
 
 #ifndef _WIN32
 #include <sys/stat.h>
-#include <dirent.h>
 #include <fnmatch.h>
 #endif
 
-static bool match(char* str, arraylist patterns) {
-#ifdef _WIN32
-	return true; // TODO: Implement this function for windows
-#else
+// TODO: Add [A-Z_0-9] matching
+static bool match(const char* str, const char* pattern) {
+	int str_pos = 0;
+	int pos = 0;
+	
+	while (pattern[pos] && str[str_pos] && pattern[pos] != '*') {
+		if (str[str_pos] != pattern[pos]) return false;
+		str_pos++;
+		pos++;
+	}
+
+	// TODO: This is probably incorrect
+	if ((!str[str_pos] && !pattern[pos]) || !pattern[pos]) return true;
+
+	pos++; // Skip the '*'
+
+	char expected = pattern[pos];
+	while (str[str_pos]) {
+		if (str[str_pos] == expected) {
+			if (!match(str + str_pos, pattern + pos)) return false;
+		}
+		str_pos++;
+	}
+
+	return true;
+}
+
+static bool matchn(char* str, arraylist patterns) {
 	if (patterns.count == 0) return true;
 	foreach (char*, pattern, patterns) {
-		if (fnmatch(*pattern, str, 0) == 0) {
+		if (match(str, *pattern)) {
 			return true;
 		}
 	}
-#endif
 	return false;
 }
 
 static bool find_rec(char* dir_name, arraylist patterns, arraylist* out) {
-#ifdef _WIN32
-	return true; // TODO: Implement this function for windows
-#else
-	DIR* dir = opendir(dir_name);
-	if (!dir) {
+	Dir dir;
+	if (!open_dir(dir_name, &dir))
 		return false;
-	}
 
-	struct dirent* entry;
-	while ((entry = readdir(dir))) {
-		if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
+	DirEntry entry;
+	while (read_dir(&dir, &entry)) {
+		char* name = entry_name(&entry);
+		if (strcmp(name, ".") == 0 || strcmp(name, "..") == 0)
 			continue;
 
-		int len = strlen(entry->d_name);
+		int len = strlen(name);
 		int dir_len = strlen(dir_name);
 
 		char* cstr = malloc(dir_len + 1 + len + 1);
 		memcpy(cstr, dir_name, dir_len);
+
 		cstr[dir_len] = '/';
-		memcpy(cstr + dir_len + 1, entry->d_name, len);
+
+		memcpy(cstr + dir_len + 1, name, len);
 		cstr[dir_len + 1 + len] = '\0';
 
-		if (entry->d_type == DT_UNKNOWN) {
-			struct stat s;
-			if (stat(cstr, &s) == -1) {
-				continue;
-			}
-
-			if (!S_ISDIR(s.st_mode) && match(cstr, patterns)) {
-				arraylist_append(out, &cstr);
-			}
-		}
-		else if (entry->d_type != DT_DIR) {
-			if (match(cstr, patterns))
-				arraylist_append(out, &cstr);
-		}
-
-		if (!find_rec(cstr, patterns, out))
+		if (entry_is_dir(&entry)) {
+			find_rec(cstr, patterns, out);
 			continue;
+		}
+
+		if (matchn(cstr, patterns)) {
+			arraylist_append(out, &cstr);
+		}
 	}
 
-	closedir(dir);
-#endif
+	close_dir(&dir);
 	return true;
 }
 
@@ -88,5 +102,3 @@ bool builtin_find(arraylist* args, int count, arraylist* out) {
 
 	return true;
 }
-
-

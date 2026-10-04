@@ -104,6 +104,7 @@ void lex(Lexer* lexer) {
 		if (i >= '0' && i <= '9') identifier_map[i] = 1;
 		if (i == '_') identifier_map[i] = 1;
 		if (i == '/') identifier_map[i] = 1;
+		if (i == '\\') identifier_map[i] = 1;
 		if (i == '.') identifier_map[i] = 1;
 		if (i == '-') identifier_map[i] = 1;
 		if (i == '*') identifier_map[i] = 1;

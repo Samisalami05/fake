@@ -23,12 +23,12 @@
 // @selection()
 
 CC = cc,
-NAME = fake,
+NAME = wow,
 SRCS = @find(src, "*.c"),
 OBJS = @pathsub($SRCS, "src/*.c", "build/*.o"),
 
-LDFLAGS = -lncursesw -rdynamic,
-CFLAGS = -Wall -ggdb -finstrument-functions,
+LDFLAGS = -lncursesw,
+CFLAGS = -Wall -ggdb,
 
 label build: $NAME {}
 
@@ -38,12 +38,12 @@ rule $NAME: $SRCS $OBJS {
 
 multi $OBJS: $SRCS {
 	@mkdir(@dirname($name)),
-	$CC $deps $CFLAGS -c -o $name
+	$CC $CFLAGS $deps -c -o $name
 }
 
 label clean {
-	rm -f fake,
-	rm -rf build
+	@rm(test),
+	@rm(build)
 }
 
 label run {

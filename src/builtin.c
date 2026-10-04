@@ -18,6 +18,7 @@ bool exec_builtin(const char* name, arraylist* args, int count, arraylist* out) 
 	else if (strcmp(name, "repeat") == 0)   return builtin_repeat(args, count, out);
 	else if (strcmp(name, "pathsub") == 0)  return builtin_pathsub(args, count, out);
 	else if (strcmp(name, "mkdir") == 0)    return builtin_mkdir(args, count, out);
+	else if (strcmp(name, "rm") == 0)       return builtin_rm(args, count, out);
 	else if (strcmp(name, "prompt") == 0)   return builtin_prompt(args, count, out);
 	else if (strcmp(name, "dirname") == 0)  return builtin_dirname(args, count, out);
 	else if (strcmp(name, "store") == 0)    return builtin_store(args, count, out);

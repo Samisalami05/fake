@@ -315,30 +315,20 @@ bool should_execute(Interpretter* in, uint32_t id) {
 
     if (block.type == BLOCK_LABEL) return true;
 
-#ifdef _WIN32
-	// TODO: Implement this function for windows
-	return true;
-#else
-    struct stat target;
-    if (stat(block.name, &target) != 0)
+
+    TimeStamp target = {0};
+    if (!file_last_modified(block.name, &target))
         return true;
 
     foreach (char*, dep, block.deps) {
-        struct stat dep_stat;
+        TimeStamp dep_time = {0};
 
-        if (stat(*dep, &dep_stat) != 0)
+        if (!file_last_modified(*dep, &dep_time))
             return true;
 
-		struct timespec dep_time = dep_stat.st_mtim;
-		struct timespec target_time = target.st_mtim;
-
-        if (dep_time.tv_sec > target_time.tv_sec
-				|| (dep_time.tv_sec == target_time.tv_sec
-				&& dep_time.tv_nsec > target_time.tv_nsec))
+        if (timestamp_is_newer(dep_time, target))
             return true;
-
     }
-#endif
 
     return false;
 }
@@ -348,7 +338,16 @@ bool execute_args(char** args) {
 	STARTUPINFO si = { sizeof(si) };
 	PROCESS_INFORMATION pi;
 
-	if (!CreateProcess(NULL, args[0], NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
+	char cmdline[1024];
+	cmdline[0] = '\0';
+	char** tmp = args;
+	while (*tmp) {
+		strcat_s(cmdline, sizeof(cmdline), *tmp);
+		strcat_s(cmdline, sizeof(cmdline), " ");
+		tmp++;
+	}
+
+	if (!CreateProcessA(NULL, cmdline, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
 		log_perror("Failed to execute program %s", args[0]);
 		return false;
 	}
@@ -428,6 +427,7 @@ bool execute_block(Interpretter* in, uint32_t id) {
 
 				if (!execute_args(args))
 					return false;
+
 				break;
 			}
 			default:

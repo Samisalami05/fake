@@ -88,7 +88,27 @@ void log_perror(const char* fmt, ...) {
 	vfprintf(stderr, fmt, args);
 	va_end(args);
 
+	#ifdef _WIN32
+	DWORD err = GetLastError();
+
+	LPSTR msg = NULL;
+	FormatMessageA(
+		FORMAT_MESSAGE_ALLOCATE_BUFFER |
+		FORMAT_MESSAGE_FROM_SYSTEM |
+		FORMAT_MESSAGE_IGNORE_INSERTS,
+		NULL,
+		err,
+		0,
+		(LPSTR)&msg,
+		0,
+		NULL);
+
+	fprintf(stderr, ": %s", msg);
+
+	LocalFree(msg);
+#else
 	fprintf(stderr, ": %s\n", strerror(errno));
+#endif
 }
 
 // Prints char n times
