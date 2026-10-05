@@ -134,6 +134,18 @@ bool timestamp_is_newer(TimeStamp a, TimeStamp b) {
 	return false;
 }
 
+bool file_is_dir(const char* path) {
+#ifndef _WIN32
+	struct stat s;
+	if (stat(path, &s) == -1) {
+		return false;
+	}
+	return S_ISDIR(s.st_mode);
+#else
+	return PathIsDirectoryA(path);
+#endif
+}
+
 bool file_last_modified(const char* path, TimeStamp* out) {
 #ifdef _WIN32
 	HANDLE hFile = CreateFileA(path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);

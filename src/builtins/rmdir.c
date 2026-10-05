@@ -2,18 +2,17 @@
 #include "../arraylist.h"
 #include "../log.h"
 
-bool builtin_rm(arraylist* args, int count, arraylist* out) {
+bool builtin_rmdir(arraylist* args, int count, arraylist* out) {
 	if (count != 1) {
-		log_error("@rm(): Expects one argument");
+		log_error("@rmdir(): Expects one argument");
 		return false;
 	}
 
     foreach (char*, path, *args) {
-        if (!remove_file(*path)) {
+        if (!remove_dir(*path)) {
             continue;
         }
     }
-
 
     return true;
 }

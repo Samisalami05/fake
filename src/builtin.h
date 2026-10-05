@@ -16,6 +16,8 @@ bool builtin_repeat(arraylist* args, int count, arraylist* out);
 bool builtin_pathsub(arraylist* args, int count, arraylist* out);
 bool builtin_mkdir(arraylist* args, int count, arraylist* out);
 bool builtin_rm(arraylist* args, int count, arraylist* out);
+bool builtin_rmdir(arraylist* args, int count, arraylist* out);
+bool builtin_rmrf(arraylist* args, int count, arraylist* out);
 bool builtin_prompt(arraylist* args, int count, arraylist* out);
 bool builtin_dirname(arraylist* args, int count, arraylist* out);
 

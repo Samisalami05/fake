@@ -54,6 +54,7 @@ typedef struct {
 } TimeStamp;
 
 bool timestamp_is_newer(TimeStamp a, TimeStamp b);
+bool file_is_dir(const char* path);
 
 bool file_last_modified(const char* path, TimeStamp* out);
 bool remove_file(const char* path);
