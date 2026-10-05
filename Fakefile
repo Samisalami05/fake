@@ -22,6 +22,9 @@
 // @option(msg, opts)   # Displays an option list
 // @selection()
 
+// [silent] or [quiet]
+// [sync]
+
 CC = cc,
 NAME = wow,
 SRCS = @find(src, "*.c"),
@@ -29,6 +32,8 @@ OBJS = @pathsub($SRCS, "src/*.c", "build/*.o"),
 
 LDFLAGS = -lncursesw,
 CFLAGS = -Wall -ggdb,
+
+wow_ = @selection(@repeat("ayo", 40)),
 
 label build: $NAME {}
 

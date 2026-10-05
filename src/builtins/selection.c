@@ -3,18 +3,15 @@
 #include <string.h>
 #include "../arraylist.h"
 #include "../log.h"
-
-#ifndef _WIN32
 #include <ncurses.h>
-#endif
-
-#ifndef _WIN32
 
 #define SCROLL_PADDING 4
 
+// TODO: fix scrolling if list is longer than the screen height
+
 static int s = 0;
 
-static void render(arraylist options, int pos, char *msg) {
+static void render(arraylist options, int pos, char *msg, bool* selected) {
     erase();
 
     int h, w;
@@ -45,12 +42,14 @@ static void render(arraylist options, int pos, char *msg) {
 
 		if (y < 0 || y >= h - 2) continue;
 
+		char mark = selected[i] ? 'x' : ' ';
+
         if (i == pos) {
             attron(A_BOLD | COLOR_PAIR(1));
-            mvprintw(y, 2, " * %-30s", opt);
+            mvprintw(y, 4, "[%c] %-30s", mark, opt);
             attroff(A_BOLD | COLOR_PAIR(1));
         } else {
-            mvprintw(y, 2, " * %s", opt);
+            mvprintw(y, 4, "[%c] %s", mark, opt);
         }
     }
 
@@ -69,17 +68,12 @@ static void render(arraylist options, int pos, char *msg) {
     refresh();
 }
 
-#endif
 
-bool builtin_option(arraylist* args, int count, arraylist* out) {
+bool builtin_selection(arraylist* args, int count, arraylist* out) {
 	if (count != 1 && count != 2) {
-		log_error("@prompt(): Expected 1 or 2 arguments, got %d", count);
+		log_error("@selection(): Expected 1 or 2 arguments, got %d", count);
 		return false;
 	}
-
-#ifdef _WIN32
-	return true; // TODO: Implement this function for windows
-#else
 
 	char* msg = NULL;
 	if (count == 2) {
@@ -92,7 +86,6 @@ bool builtin_option(arraylist* args, int count, arraylist* out) {
 	keypad(stdscr, TRUE);
 	curs_set(0);
 
-
 	start_color();
 	use_default_colors();
 
@@ -102,9 +95,11 @@ bool builtin_option(arraylist* args, int count, arraylist* out) {
 	init_pair(4, COLOR_RED, -1);
 
 	arraylist options = args[count == 1 ? 0 : 1];
+	bool selected[options.count];
+	memset(selected, 0, sizeof(selected));
 	int pos = 0;
 
-	render(options, pos, msg);
+	render(options, pos, msg, selected);
 	
 	int c;
 	while ((c = getch()) != '\n' && c != 'q') {
@@ -114,18 +109,23 @@ bool builtin_option(arraylist* args, int count, arraylist* out) {
 		else if (c == KEY_DOWN) {
 			if (pos < (int64_t)options.count - 1) pos++;
 		}
+		else if (c == ' ') {
+			selected[pos] = !selected[pos];
+		}
 
-		render(options, pos, msg);
+		render(options, pos, msg, selected);
 	}
 	if (c == 'q') {
 		endwin();
 		log_info("Exiting options menu");
 		return false;
 	}
-	if (options.count != 0)
-		arraylist_append(out, options.items + pos * options.item_size);
+	for (int i = 0; i < options.count; i++) {
+		if (selected[i]) {
+			arraylist_append(out, options.items + i * options.item_size);
+		}
+	}
 	
 	endwin();
-#endif
 	return true;
 }
