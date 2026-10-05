@@ -8,6 +8,7 @@
 #include <windows.h>
 #else
 #include <sys/stat.h>
+#include <errno.h>
 #endif
 
 bool make_dir(const char *path) {

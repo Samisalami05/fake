@@ -21,19 +21,18 @@
 // @combine(var, sep)
 // @option(msg, opts)   # Displays an option list
 // @selection()
+// @repeat()
 
 // [silent] or [quiet]
 // [sync]
 
 CC = cc,
-NAME = wow,
+NAME = fake,
 SRCS = @find(src, "*.c"),
 OBJS = @pathsub($SRCS, "src/*.c", "build/*.o"),
 
 LDFLAGS = -lncursesw,
 CFLAGS = -Wall -ggdb,
-
-wow_ = @selection(@repeat("ayo", 40)),
 
 label build: $NAME {}
 
@@ -47,8 +46,8 @@ multi $OBJS: $SRCS {
 }
 
 label clean {
-	@rm(test),
-	@rm(build)
+	@rm($NAME),
+	@rmrf(build)
 }
 
 label run {

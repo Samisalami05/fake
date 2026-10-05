@@ -2,7 +2,10 @@
 #include "../arraylist.h"
 #include "../log.h"
 
-// TODO: @rm() @rmdir() @rmall() or @rm_all() or @rmrf()
+// TODO: 
+// @rm()
+// @rmdir()
+// @rmall() or @rm_all() or @rmrf()
 
 bool builtin_rm(arraylist* args, int count, arraylist* out) {
 	if (count != 1) {
@@ -11,7 +14,7 @@ bool builtin_rm(arraylist* args, int count, arraylist* out) {
 	}
 
     foreach (char*, path, *args) {
-        if (!remove_dir(*path)) {
+        if (!remove_file(*path)) {
             continue;
         }
     }

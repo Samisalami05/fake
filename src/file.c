@@ -141,7 +141,6 @@ bool file_last_modified(const char* path, TimeStamp* out) {
 
 	FILETIME ftLastWrite;
 	if (!GetFileTime(hFile, NULL, NULL, &ftLastWrite)) {
-		log_perror("Failed to get last modified time for file '%s'", path);
 		CloseHandle(hFile);
 		return false;
 	}
@@ -163,8 +162,7 @@ bool file_last_modified(const char* path, TimeStamp* out) {
 	out->nsec = total_nanoseconds;
 #else
 	struct stat st;
-	if (stat(file.ptr, &st) != 0) {
-		log_perror("Failed to get last modified time for file '%s'", file.ptr);
+	if (stat(path, &st) != 0) {
 		return false;
 	}
 
@@ -208,7 +206,7 @@ bool remove_dir(const char* path) {
 // Returns null on error and status is set to indicate the error.
 bool open_dir(const char* path, Dir* out) {
 #ifndef _WIN32
-    Dir* dir = opendir(path);
+    Dir dir = opendir(path);
     if (!dir) {
         log_perror("Failed to open directory '%s'", path);
         return false;
@@ -223,7 +221,7 @@ bool open_dir(const char* path, Dir* out) {
 
 bool read_dir(Dir* dir, DirEntry* entry) {
 #ifndef _WIN32
-    *entry = readdir(dir);
+    *entry = readdir(*dir);
 	if (!*entry) return false;
     return true;
 #else
@@ -250,7 +248,7 @@ bool read_dir(Dir* dir, DirEntry* entry) {
 
 bool close_dir(Dir* dir) {
 #ifndef _WIN32
-    if (closedir(dir) != 0) {
+    if (closedir(*dir) != 0) {
         log_perror("Failed to close directory");
         return false;
     }
@@ -266,23 +264,24 @@ bool close_dir(Dir* dir) {
 
 bool entry_is_dir(DirEntry* entry) {
 #ifndef _WIN32
-	if (entry->d_type == DT_UNKNOWN) {
+	struct dirent* ent = *entry;
+	if (ent->d_type == DT_UNKNOWN) {
 		struct stat s;
-		if (stat(entry->d_name, &s) == -1) {
-			log_perror("Failed to stat file '%s'", entry->d_name);
+		if (stat(ent->d_name, &s) == -1) {
+			log_perror("Failed to stat file '%s'", ent->d_name);
 			return false;
 		}
 		return S_ISDIR(s.st_mode);
 	}
-	return entry->d_type == DT_DIR;
+	return ent->d_type == DT_DIR;
 #else
-	return (entry->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
+	return (ent->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
 #endif
 }
 
 char* entry_name(DirEntry* entry) {
 #ifndef _WIN32
-	return entry->d_name;
+	return (*entry)->d_name;
 #else
 	return entry->cFileName;
 #endif

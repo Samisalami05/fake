@@ -21,8 +21,8 @@ else
     EXE :=
     
     MKDIR_BUILD = mkdir -p build build/builtins
-    RM_FILE = rm -f
-    RM_DIR = rm -rf
+    RM_FILE = rm -f $(NAME)
+    RM_DIR = rm -rf build
 
 endif
 

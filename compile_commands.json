@@ -1,0 +1,450 @@
+[
+  {
+    "file": "src/allocator.c",
+    "arguments": [
+      "/usr/bin/cc",
+      "-Wall",
+      "-ggdb",
+      "-c",
+      "src/allocator.c",
+      "-o",
+      "build/allocator.o"
+    ],
+    "directory": "/home/samisalami/Projects/fake",
+    "output": "build/allocator.o"
+  },
+  {
+    "file": "src/arraylist.c",
+    "arguments": [
+      "/usr/bin/cc",
+      "-Wall",
+      "-ggdb",
+      "-c",
+      "src/arraylist.c",
+      "-o",
+      "build/arraylist.o"
+    ],
+    "directory": "/home/samisalami/Projects/fake",
+    "output": "build/arraylist.o"
+  },
+  {
+    "file": "src/ast.c",
+    "arguments": [
+      "/usr/bin/cc",
+      "-Wall",
+      "-ggdb",
+      "-c",
+      "src/ast.c",
+      "-o",
+      "build/ast.o"
+    ],
+    "directory": "/home/samisalami/Projects/fake",
+    "output": "build/ast.o"
+  },
+  {
+    "file": "src/builtin.c",
+    "arguments": [
+      "/usr/bin/cc",
+      "-Wall",
+      "-ggdb",
+      "-c",
+      "src/builtin.c",
+      "-o",
+      "build/builtin.o"
+    ],
+    "directory": "/home/samisalami/Projects/fake",
+    "output": "build/builtin.o"
+  },
+  {
+    "file": "src/cache.c",
+    "arguments": [
+      "/usr/bin/cc",
+      "-Wall",
+      "-ggdb",
+      "-c",
+      "src/cache.c",
+      "-o",
+      "build/cache.o"
+    ],
+    "directory": "/home/samisalami/Projects/fake",
+    "output": "build/cache.o"
+  },
+  {
+    "file": "src/fake.c",
+    "arguments": [
+      "/usr/bin/cc",
+      "-Wall",
+      "-ggdb",
+      "-c",
+      "src/fake.c",
+      "-o",
+      "build/fake.o"
+    ],
+    "directory": "/home/samisalami/Projects/fake",
+    "output": "build/fake.o"
+  },
+  {
+    "file": "src/file.c",
+    "arguments": [
+      "/usr/bin/cc",
+      "-Wall",
+      "-ggdb",
+      "-c",
+      "src/file.c",
+      "-o",
+      "build/file.o"
+    ],
+    "directory": "/home/samisalami/Projects/fake",
+    "output": "build/file.o"
+  },
+  {
+    "file": "src/interpretter.c",
+    "arguments": [
+      "/usr/bin/cc",
+      "-Wall",
+      "-ggdb",
+      "-c",
+      "src/interpretter.c",
+      "-o",
+      "build/interpretter.o"
+    ],
+    "directory": "/home/samisalami/Projects/fake",
+    "output": "build/interpretter.o"
+  },
+  {
+    "file": "src/lex.c",
+    "arguments": [
+      "/usr/bin/cc",
+      "-Wall",
+      "-ggdb",
+      "-c",
+      "src/lex.c",
+      "-o",
+      "build/lex.o"
+    ],
+    "directory": "/home/samisalami/Projects/fake",
+    "output": "build/lex.o"
+  },
+  {
+    "file": "src/log.c",
+    "arguments": [
+      "/usr/bin/cc",
+      "-Wall",
+      "-ggdb",
+      "-c",
+      "src/log.c",
+      "-o",
+      "build/log.o"
+    ],
+    "directory": "/home/samisalami/Projects/fake",
+    "output": "build/log.o"
+  },
+  {
+    "file": "src/main.c",
+    "arguments": [
+      "/usr/bin/cc",
+      "-Wall",
+      "-ggdb",
+      "-c",
+      "src/main.c",
+      "-o",
+      "build/main.o"
+    ],
+    "directory": "/home/samisalami/Projects/fake",
+    "output": "build/main.o"
+  },
+  {
+    "file": "src/parse_args.c",
+    "arguments": [
+      "/usr/bin/cc",
+      "-Wall",
+      "-ggdb",
+      "-c",
+      "src/parse_args.c",
+      "-o",
+      "build/parse_args.o"
+    ],
+    "directory": "/home/samisalami/Projects/fake",
+    "output": "build/parse_args.o"
+  },
+  {
+    "file": "src/parse.c",
+    "arguments": [
+      "/usr/bin/cc",
+      "-Wall",
+      "-ggdb",
+      "-c",
+      "src/parse.c",
+      "-o",
+      "build/parse.o"
+    ],
+    "directory": "/home/samisalami/Projects/fake",
+    "output": "build/parse.o"
+  },
+  {
+    "file": "src/str.c",
+    "arguments": [
+      "/usr/bin/cc",
+      "-Wall",
+      "-ggdb",
+      "-c",
+      "src/str.c",
+      "-o",
+      "build/str.o"
+    ],
+    "directory": "/home/samisalami/Projects/fake",
+    "output": "build/str.o"
+  },
+  {
+    "file": "src/token.c",
+    "arguments": [
+      "/usr/bin/cc",
+      "-Wall",
+      "-ggdb",
+      "-c",
+      "src/token.c",
+      "-o",
+      "build/token.o"
+    ],
+    "directory": "/home/samisalami/Projects/fake",
+    "output": "build/token.o"
+  },
+  {
+    "file": "src/builtins/arch.c",
+    "arguments": [
+      "/usr/bin/cc",
+      "-Wall",
+      "-ggdb",
+      "-c",
+      "src/builtins/arch.c",
+      "-o",
+      "build/builtins/arch.o"
+    ],
+    "directory": "/home/samisalami/Projects/fake",
+    "output": "build/builtins/arch.o"
+  },
+  {
+    "file": "src/builtins/concat.c",
+    "arguments": [
+      "/usr/bin/cc",
+      "-Wall",
+      "-ggdb",
+      "-c",
+      "src/builtins/concat.c",
+      "-o",
+      "build/builtins/concat.o"
+    ],
+    "directory": "/home/samisalami/Projects/fake",
+    "output": "build/builtins/concat.o"
+  },
+  {
+    "file": "src/builtins/dirname.c",
+    "arguments": [
+      "/usr/bin/cc",
+      "-Wall",
+      "-ggdb",
+      "-c",
+      "src/builtins/dirname.c",
+      "-o",
+      "build/builtins/dirname.o"
+    ],
+    "directory": "/home/samisalami/Projects/fake",
+    "output": "build/builtins/dirname.o"
+  },
+  {
+    "file": "src/builtins/echo.c",
+    "arguments": [
+      "/usr/bin/cc",
+      "-Wall",
+      "-ggdb",
+      "-c",
+      "src/builtins/echo.c",
+      "-o",
+      "build/builtins/echo.o"
+    ],
+    "directory": "/home/samisalami/Projects/fake",
+    "output": "build/builtins/echo.o"
+  },
+  {
+    "file": "src/builtins/env.c",
+    "arguments": [
+      "/usr/bin/cc",
+      "-Wall",
+      "-ggdb",
+      "-c",
+      "src/builtins/env.c",
+      "-o",
+      "build/builtins/env.o"
+    ],
+    "directory": "/home/samisalami/Projects/fake",
+    "output": "build/builtins/env.o"
+  },
+  {
+    "file": "src/builtins/find.c",
+    "arguments": [
+      "/usr/bin/cc",
+      "-Wall",
+      "-ggdb",
+      "-c",
+      "src/builtins/find.c",
+      "-o",
+      "build/builtins/find.o"
+    ],
+    "directory": "/home/samisalami/Projects/fake",
+    "output": "build/builtins/find.o"
+  },
+  {
+    "file": "src/builtins/mkdir.c",
+    "arguments": [
+      "/usr/bin/cc",
+      "-Wall",
+      "-ggdb",
+      "-c",
+      "src/builtins/mkdir.c",
+      "-o",
+      "build/builtins/mkdir.o"
+    ],
+    "directory": "/home/samisalami/Projects/fake",
+    "output": "build/builtins/mkdir.o"
+  },
+  {
+    "file": "src/builtins/option.c",
+    "arguments": [
+      "/usr/bin/cc",
+      "-Wall",
+      "-ggdb",
+      "-c",
+      "src/builtins/option.c",
+      "-o",
+      "build/builtins/option.o"
+    ],
+    "directory": "/home/samisalami/Projects/fake",
+    "output": "build/builtins/option.o"
+  },
+  {
+    "file": "src/builtins/os.c",
+    "arguments": [
+      "/usr/bin/cc",
+      "-Wall",
+      "-ggdb",
+      "-c",
+      "src/builtins/os.c",
+      "-o",
+      "build/builtins/os.o"
+    ],
+    "directory": "/home/samisalami/Projects/fake",
+    "output": "build/builtins/os.o"
+  },
+  {
+    "file": "src/builtins/pathsub.c",
+    "arguments": [
+      "/usr/bin/cc",
+      "-Wall",
+      "-ggdb",
+      "-c",
+      "src/builtins/pathsub.c",
+      "-o",
+      "build/builtins/pathsub.o"
+    ],
+    "directory": "/home/samisalami/Projects/fake",
+    "output": "build/builtins/pathsub.o"
+  },
+  {
+    "file": "src/builtins/prompt.c",
+    "arguments": [
+      "/usr/bin/cc",
+      "-Wall",
+      "-ggdb",
+      "-c",
+      "src/builtins/prompt.c",
+      "-o",
+      "build/builtins/prompt.o"
+    ],
+    "directory": "/home/samisalami/Projects/fake",
+    "output": "build/builtins/prompt.o"
+  },
+  {
+    "file": "src/builtins/read.c",
+    "arguments": [
+      "/usr/bin/cc",
+      "-Wall",
+      "-ggdb",
+      "-c",
+      "src/builtins/read.c",
+      "-o",
+      "build/builtins/read.o"
+    ],
+    "directory": "/home/samisalami/Projects/fake",
+    "output": "build/builtins/read.o"
+  },
+  {
+    "file": "src/builtins/repeat.c",
+    "arguments": [
+      "/usr/bin/cc",
+      "-Wall",
+      "-ggdb",
+      "-c",
+      "src/builtins/repeat.c",
+      "-o",
+      "build/builtins/repeat.o"
+    ],
+    "directory": "/home/samisalami/Projects/fake",
+    "output": "build/builtins/repeat.o"
+  },
+  {
+    "file": "src/builtins/rm.c",
+    "arguments": [
+      "/usr/bin/cc",
+      "-Wall",
+      "-ggdb",
+      "-c",
+      "src/builtins/rm.c",
+      "-o",
+      "build/builtins/rm.o"
+    ],
+    "directory": "/home/samisalami/Projects/fake",
+    "output": "build/builtins/rm.o"
+  },
+  {
+    "file": "src/builtins/selection.c",
+    "arguments": [
+      "/usr/bin/cc",
+      "-Wall",
+      "-ggdb",
+      "-c",
+      "src/builtins/selection.c",
+      "-o",
+      "build/builtins/selection.o"
+    ],
+    "directory": "/home/samisalami/Projects/fake",
+    "output": "build/builtins/selection.o"
+  },
+  {
+    "file": "src/builtins/store.c",
+    "arguments": [
+      "/usr/bin/cc",
+      "-Wall",
+      "-ggdb",
+      "-c",
+      "src/builtins/store.c",
+      "-o",
+      "build/builtins/store.o"
+    ],
+    "directory": "/home/samisalami/Projects/fake",
+    "output": "build/builtins/store.o"
+  },
+  {
+    "file": "src/builtins/stored.c",
+    "arguments": [
+      "/usr/bin/cc",
+      "-Wall",
+      "-ggdb",
+      "-c",
+      "src/builtins/stored.c",
+      "-o",
+      "build/builtins/stored.o"
+    ],
+    "directory": "/home/samisalami/Projects/fake",
+    "output": "build/builtins/stored.o"
+  }
+]
