@@ -1,4 +1,3 @@
-#include <linux/limits.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
@@ -15,8 +14,8 @@ bool rmdir_rec(const char* path) {
 		if (strcmp(name, ".") == 0 || strcmp(name, "..") == 0)
 			continue;
 
-		char entry_path[PATH_MAX];
-		snprintf(entry_path, PATH_MAX, "%s/%s", path, name);
+		char entry_path[256];
+		snprintf(entry_path, 256, "%s/%s", path, name);
 
 		if (entry_is_dir(&entry)) {
 			rmdir_rec(entry_path);

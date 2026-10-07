@@ -1,7 +1,6 @@
 #include "file.h"
 #include "log.h"
 #include "str.h"
-#include <fcntl.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,6 +11,10 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <fcntl.h> // TODO: Remove this
+#else
+#include <windows.h>
+#include <shlwapi.h>
 #endif
 
 bool read_file(const char* path, FileView* out) {
@@ -32,9 +35,9 @@ bool read_file(const char* path, FileView* out) {
 		return false;
 	}
 
-	out->size = size - 1;
+	out->size = size;
 
-	fread(out->ptr, 1, size - 1, fp);
+	fread(out->ptr, 1, size, fp);
 	fclose(fp);
 
 #else
@@ -142,7 +145,8 @@ bool file_is_dir(const char* path) {
 	}
 	return S_ISDIR(s.st_mode);
 #else
-	return PathIsDirectoryA(path);
+	DWORD attrib = GetFileAttributes(path);
+    return (attrib & FILE_ATTRIBUTE_DIRECTORY) != 0;
 #endif
 }
 
@@ -287,7 +291,7 @@ bool entry_is_dir(DirEntry* entry) {
 	}
 	return ent->d_type == DT_DIR;
 #else
-	return (ent->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
+	return (entry->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
 #endif
 }
 

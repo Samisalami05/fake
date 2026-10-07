@@ -3,7 +3,10 @@
 #include <string.h>
 #include "../arraylist.h"
 #include "../log.h"
+
+#ifndef _WIN32
 #include <ncurses.h>
+
 
 #define SCROLL_PADDING 4
 
@@ -68,12 +71,18 @@ static void render(arraylist options, int pos, char *msg, bool* selected) {
     refresh();
 }
 
+#endif
+
 
 bool builtin_selection(arraylist* args, int count, arraylist* out) {
 	if (count != 1 && count != 2) {
 		log_error("@selection(): Expected 1 or 2 arguments, got %d", count);
 		return false;
 	}
+
+#ifdef _WIN32
+	return true;
+#else
 
 	char* msg = NULL;
 	if (count == 2) {
@@ -127,5 +136,6 @@ bool builtin_selection(arraylist* args, int count, arraylist* out) {
 	}
 	
 	endwin();
+#endif
 	return true;
 }

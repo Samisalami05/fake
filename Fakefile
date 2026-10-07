@@ -27,7 +27,7 @@
 // [sync]
 
 CC = cc,
-NAME = fake,
+NAME = @if(@os() "windows", "fake.exe", "fake"),
 SRCS = @find(src, "*.c"),
 OBJS = @pathsub($SRCS, "src/*.c", "build/*.o"),
 
