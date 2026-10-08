@@ -9,7 +9,6 @@ CFLAGS := -Wall -ggdb
 
 # Detect Windows
 ifeq ($(OS),Windows_NT)
-
     EXE := .exe
 
     MKDIR_BUILD = powershell -NoProfile -Command "New-Item -ItemType Directory -Force -Path 'build','build/builtins' | Out-Null"
@@ -19,7 +18,6 @@ ifeq ($(OS),Windows_NT)
 	INSTALL = powershell -NoProfile -Command "Copy $(NAME)$(EXE) C:\msys64\usr\local\bin"
 	UNINSTALL = powershell -NoProfile -Command "Remove-Item -Force -ErrorAction SilentlyContinue C:\msys64\usr\local\bin\$(NAME)$(EXE)"
 else
-
     EXE :=
     
     MKDIR_BUILD = mkdir -p build build/builtins
