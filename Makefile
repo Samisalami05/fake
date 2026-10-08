@@ -16,6 +16,8 @@ ifeq ($(OS),Windows_NT)
     RM_FILE = powershell -NoProfile -Command "if (Test-Path '$(NAME)$(EXE)') { Remove-Item -Force -ErrorAction SilentlyContinue '$(NAME)$(EXE)' }"
     RM_DIR = powershell -NoProfile -Command "if (Test-Path 'build') { Remove-Item -Recurse -Force -ErrorAction SilentlyContinue 'build' }"
 
+	INSTALL = powershell -NoProfile -Command "Copy $(NAME)$(EXE) C:\msys64\usr\local\bin"
+	UNINSTALL = powershell -NoProfile -Command "Remove-Item -Force -ErrorAction SilentlyContinue C:\msys64\usr\local\bin\$(NAME)$(EXE)"
 else
 
     EXE :=
@@ -24,6 +26,8 @@ else
     RM_FILE = rm -f $(NAME)
     RM_DIR = rm -rf build
 
+	INSTALL = sudo cp $(NAME) /usr/local/bin
+	UNINSTALL = rm -f /usr/local/bin/$(NAME)
 endif
 
 $(NAME)$(EXE): $(OBJS)
@@ -33,29 +37,13 @@ build/%.o: src/%.c
 	@$(MKDIR_BUILD)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-.PHONY: run clean install uninstall
-
-run: $(NAME)$(EXE)
-ifeq ($(OS),Windows_NT)
-	.\$(NAME)$(EXE)
-else
-	./$(NAME)
-endif
+.PHONY: clean install uninstall
 
 install: $(NAME)$(EXE)
-ifeq ($(OS),Windows_NT)
-	@echo "install is not supported natively on Windows"
-	@echo "Copy $(NAME)$(EXE) somewhere in your PATH manually."
-else
-	sudo cp $(NAME) /usr/local/bin
-endif
+	$(INSTALL)
 
 uninstall:
-ifeq ($(OS),Windows_NT)
-	@echo "uninstall is not supported natively on Windows"
-else
-	rm -f /usr/local/bin/$(NAME)
-endif
+	$(UNINSTALL)
 
 clean:
 	$(RM_FILE)
