@@ -1,12 +1,14 @@
 #include <stdbool.h>
 #include <string.h>
+
 #include "../log.h"
 #include "../arraylist.h"
+#include "../builtin.h"
 
-bool builtin_concat(arraylist* args, int count, arraylist* out) {
+int builtin_concat(arraylist* args, int count, arraylist* out) {
 	if (count != 2) {
 		log_error("@concat(): Expected two arguments, got %d", count);
-		return false;
+		return BUILTIN_ERROR;
 	}
 
 	arraylist values = args[0];
@@ -24,5 +26,5 @@ bool builtin_concat(arraylist* args, int count, arraylist* out) {
 		arraylist_append(out, &compacted.items);
 	}
 
-	return true;
+	return BUILTIN_OK;
 }

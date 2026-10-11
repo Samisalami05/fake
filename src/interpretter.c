@@ -1,10 +1,12 @@
 #include "interpretter.h"
 #include "arraylist.h"
 #include "builtin.h"
+#include "fake.h"
 #include "log.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <wingdi.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -47,7 +49,7 @@ int skip_cmd(Ast* ast, int node) {
 				pos++;
 				for (int i = 0; i < child.child_count; i++) {
 					pos = skip_cmd(ast, pos);
-					if (pos == -1) return -1;
+					if (pos < 0) return pos;
 				}
 				break;
 			}
@@ -77,7 +79,7 @@ int process_cmd(Interpretter* in, int node, arraylist* out, char* target) {
 				if (strcmp(name, "if") == 0) {
 					if (child.child_count < 2) {
 						log_error("@if(): Expects atleast two arguments, got %d", child.child_count);
-						return -1;
+						return ST_ERROR;
 					}
 
 					int expr_count = child.child_count == 2 
@@ -91,7 +93,7 @@ int process_cmd(Interpretter* in, int node, arraylist* out, char* target) {
 					for (int i = 0; i < expr_count; i++) {
 						arraylist_clear(&values);
 						pos = process_cmd(in, pos, &values, target);
-						if (pos == -1) return -1;
+						if (pos < 0) return pos;
 
 
 						char* first = ((char**)values.items)[0];
@@ -112,15 +114,15 @@ int process_cmd(Interpretter* in, int node, arraylist* out, char* target) {
 
 					if (equals) {
 						pos = process_cmd(in, pos, out, target);
-						if (pos == -1) return -1;
+						if (pos < 0) return pos;
 						pos = skip_cmd(in->ast, pos);
-						if (pos == -1) return -1;
+						if (pos < 0) return pos;
 					}
 					else if (child.child_count > 2) {
 						pos = skip_cmd(in->ast, pos);
-						if (pos == -1) return -1;
+						if (pos < 0) return pos;
 						pos = process_cmd(in, pos, out, target);
-						if (pos == -1) return -1;
+						if (pos < 0) return pos;
 					}
 
 					break;
@@ -130,12 +132,12 @@ int process_cmd(Interpretter* in, int node, arraylist* out, char* target) {
 				for (int i = 0; i < child.child_count; i++) {
 					args[i] = arraylist_new(sizeof(char*));
 					pos = process_cmd(in, pos, args + i, target);
-					if (pos == -1) return -1;
+					if (pos < 0) return pos;
 				}
 
-				if (!exec_builtin(name, args, child.child_count, out)) {
+				if (exec_builtin(name, args, child.child_count, out) != BUILTIN_OK) {
 					log_error("Could not execute builtin @%s(): Make sure it exists", name);
-					return -1;
+					return ST_ERROR;
 				}
 				break;
 			}
@@ -148,7 +150,7 @@ int process_cmd(Interpretter* in, int node, arraylist* out, char* target) {
 					int id = find_block(in, target);
 					if (id == -1) {
 						log_error("Unreachable");
-						return -1;
+						return ST_ERROR;
 					}
 
 					Block block = get_block(in, id);
@@ -160,7 +162,7 @@ int process_cmd(Interpretter* in, int node, arraylist* out, char* target) {
 					int var = find_var(in, name);
 					if (var == -1) {
 						log_error("Variable '%s' does not exist", name);
-						return -1;
+						return ST_ERROR;
 					}
 					
 					arraylist values = in->varmap[var].value;
@@ -174,11 +176,11 @@ int process_cmd(Interpretter* in, int node, arraylist* out, char* target) {
 			}
 			case AST_NODE_AUTOVAR: {
 				log_error("Autovars not implemented");
-				return -1;
+				return ST_ERROR;
 
 				if (!target) {
 					log_error("Autovars can only exist in blocks");
-					return -1;
+					return ST_ERROR;
 				}
 				char* name = file_str_ref(in->file, child.ref);
 				
@@ -200,7 +202,7 @@ bool process_var(Interpretter* in, int node) {
 
 	char* name = file_str_ref(in->file, in->ast->data[node].ref);
 	arraylist values = arraylist_new(sizeof(char*));
-	if (process_cmd(in, node + 1, &values, NULL) == -1) {
+	if (process_cmd(in, node + 1, &values, NULL) < 0) {
 		log_error("Failed to process variable '%s'", name);
 		return false;
 	}
@@ -287,6 +289,7 @@ bool process_block(Interpretter* in, int node) {
 
 	return true;
 }
+
 bool run_prepass(Interpretter* in) {
 	in->blocks = arraylist_new(sizeof(Block));
 
@@ -400,7 +403,7 @@ bool execute_block(Interpretter* in, uint32_t id) {
 			case AST_NODE_NAMES:
 			case AST_NODE_DEPS:
 				pos = skip_cmd(in->ast, pos);
-				if (pos == -1) {
+				if (pos < 0) {
 					log_error("Failed to execute block");
 					return false;
 				}
@@ -408,7 +411,7 @@ bool execute_block(Interpretter* in, uint32_t id) {
 			case AST_NODE_CMD: {
 				arraylist arglist = arraylist_new(sizeof(char*));
 				pos = process_cmd(in, pos, &arglist, block.name);
-				if (pos == -1) {
+				if (pos < 0) {
 					log_error("Failed to execute block");
 					return false;
 				}

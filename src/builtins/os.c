@@ -1,11 +1,13 @@
 #include <stdbool.h>
+
 #include "../arraylist.h"
 #include "../log.h"
+#include "../builtin.h"
 
-bool builtin_os(arraylist* args, int count, arraylist* out) {
+int builtin_os(arraylist* args, int count, arraylist* out) {
 	if (count != 0) {
 		log_error("@os(): Expects no arguments");
-		return false;
+		return BUILTIN_ERROR;
 	}
 
 	char* os;
@@ -27,5 +29,5 @@ bool builtin_os(arraylist* args, int count, arraylist* out) {
 #endif
 	arraylist_append(out, &os);
 
-	return true;
+	return BUILTIN_OK;
 }

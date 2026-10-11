@@ -139,7 +139,7 @@ void lex(Lexer* lexer) {
 			case '\t':
 			case '\n':
 			case '\r':
-			case '\0': // TODO: this might be bad, temporary fix for windows
+			//case '\0': // TODO: this might be bad, temporary fix for windows
 				lexer->pos++;
 				break;
 
@@ -196,6 +196,7 @@ StrRef lexer_token_id_str(Lexer *lexer, uint32_t token_index) {
 		// synchronize with tokenless characters!
 		if (lexer->file[i] == ' ') break;
 		if (lexer->file[i] == '\t') break;
+		if (lexer->file[i] == '\r') break;
 		if (lexer->file[i] == '\n') break;
 	}
 
@@ -211,11 +212,14 @@ void lexer_debug(Lexer* lexer) {
 		Token token = ((Token*)lexer->tokens.items)[i];
 
 		StrRef ref = lexer_token_id_str(lexer, i);
-		printf("%3d:%3d: %.*s", i, token.index, ref.len, lexer->file + ref.src);
+		printf("%3d:%3d:", i, token.index);
+		if (token.tag != TOKEN_EOF) {
+			printf(" '%.*s' -", ref.len, lexer->file + ref.src);
+		}
 
 		char* tag = token_tag_str(token.tag);
 		if (strncmp(tag, lexer->file + ref.src, ref.len) != 0) {
-			printf(" - %s", tag);
+			printf(" %s", tag);
 		}
 
 		printf("\n");

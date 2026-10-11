@@ -1,15 +1,14 @@
 #include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+
 #include "../arraylist.h"
 #include "../log.h"
 #include "../cache.h"
+#include "../builtin.h"
 
-bool builtin_stored(arraylist* args, int count, arraylist* out) {
+int builtin_stored(arraylist* args, int count, arraylist* out) {
 	if (count != 1) {
 		log_error("@stored(): Expects one argument, got %d\n", count);
-		return false;
+		return BUILTIN_ERROR;
 	}
 
 	char* ret = "true";
@@ -22,5 +21,5 @@ bool builtin_stored(arraylist* args, int count, arraylist* out) {
 
 	arraylist_append(out, &ret);
 
-	return true;
+	return BUILTIN_OK;
 }

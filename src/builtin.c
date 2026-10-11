@@ -8,7 +8,7 @@
 #include <sys/stat.h>
 
 
-bool exec_builtin(const char* name, arraylist* args, int count, arraylist* out) {
+int exec_builtin(const char* name, arraylist* args, int count, arraylist* out) {
 	if      (strcmp(name, "os") == 0)        return builtin_os(args, count, out);
 	else if (strcmp(name, "arch") == 0)      return builtin_arch(args, count, out);
 	else if (strcmp(name, "env") == 0)       return builtin_env(args, count, out);
@@ -28,5 +28,6 @@ bool exec_builtin(const char* name, arraylist* args, int count, arraylist* out) 
 	else if (strcmp(name, "stored") == 0)    return builtin_stored(args, count, out);
 	else if (strcmp(name, "option") == 0)    return builtin_option(args, count, out);
 	else if (strcmp(name, "selection") == 0) return builtin_selection(args, count, out);
-	return false;
+	log_error("Unknown builtin '%s'\n", name);
+	return BUILTIN_ERROR;
 }

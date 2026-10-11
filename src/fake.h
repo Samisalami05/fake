@@ -10,6 +10,11 @@
 
 #include <stdint.h>
 
+// Status
+#define ST_OK 0
+#define ST_ERROR -1
+#define ST_EXIT -2
+
 typedef struct {
 	FakeConfig conf;
 

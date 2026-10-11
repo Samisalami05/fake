@@ -1,13 +1,15 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include "../log.h"
 #include "../arraylist.h"
+#include "../builtin.h"
 
-bool builtin_repeat(arraylist* args, int count, arraylist* out) {
+int builtin_repeat(arraylist* args, int count, arraylist* out) {
 	if (count != 2) {
 		log_error("@repeat(): Expected two arguments, got %d", count);
-		return false;
+		return BUILTIN_ERROR;
 	}
 
 	arraylist values = args[0];
@@ -19,5 +21,5 @@ bool builtin_repeat(arraylist* args, int count, arraylist* out) {
 		}
 	}
 
-	return true;
+	return BUILTIN_OK;
 }

@@ -1,11 +1,13 @@
 #include <stdbool.h>
+
 #include "../arraylist.h"
 #include "../log.h"
+#include "../builtin.h"
 
-bool builtin_arch(arraylist* args, int count, arraylist* out) {
+int builtin_arch(arraylist* args, int count, arraylist* out) {
 	if (count != 0) {
 		log_error("@arch(): Expects no arguments");
-		return false;
+		return BUILTIN_ERROR;
 	}
 
 	char* arch;
@@ -61,5 +63,5 @@ bool builtin_arch(arraylist* args, int count, arraylist* out) {
 
 	arraylist_append(out, &arch);
 
-	return true;
+	return BUILTIN_OK;
 }

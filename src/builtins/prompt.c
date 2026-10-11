@@ -1,13 +1,15 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
+
 #include "../arraylist.h"
 #include "../log.h"
+#include "../builtin.h"
 
-bool builtin_prompt(arraylist* args, int count, arraylist* out) {
+int builtin_prompt(arraylist* args, int count, arraylist* out) {
 	if (count > 3) {
 		log_error("@prompt(): Expected 3 or less argument, got %d", count);
-		return false;
+		return BUILTIN_ERROR;
 	}
 
 	arraylist msg = args[0];
@@ -33,5 +35,5 @@ bool builtin_prompt(arraylist* args, int count, arraylist* out) {
 		arraylist_append(out, &ret);
 	}
 
-	return true;
+	return BUILTIN_OK;
 }

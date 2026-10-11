@@ -1,8 +1,10 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
+
 #include "../arraylist.h"
 #include "../log.h"
+#include "../builtin.h"
 
 bool rmdir_rec(const char* path) {
 	Dir dir;
@@ -30,10 +32,10 @@ bool rmdir_rec(const char* path) {
 	return true;
 }
 
-bool builtin_rmrf(arraylist* args, int count, arraylist* out) {
+int builtin_rmrf(arraylist* args, int count, arraylist* out) {
 	if (count != 1) {
 		log_error("@rmrf(): Expects one argument");
-		return false;
+		return BUILTIN_ERROR;
 	}
 
     foreach (char*, path, *args) {
@@ -44,6 +46,5 @@ bool builtin_rmrf(arraylist* args, int count, arraylist* out) {
 		remove_file(*path);
     }
 
-
-    return true;
+    return BUILTIN_OK;
 }

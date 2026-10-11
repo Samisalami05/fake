@@ -1,13 +1,14 @@
 #include <stdbool.h>
-#include <stdio.h>
 #include <string.h>
+
 #include "../arraylist.h"
 #include "../log.h"
+#include "../builtin.h"
 
-bool builtin_dirname(arraylist* args, int count, arraylist* out) {
+int builtin_dirname(arraylist* args, int count, arraylist* out) {
 	if (count != 1) {
 		log_error("@dirname(): Expected 1 argument, got %d\n", count);
-		return false;
+		return BUILTIN_ERROR;
 	}
 
 	foreach (char*, arg, args[0]) {
@@ -20,5 +21,5 @@ bool builtin_dirname(arraylist* args, int count, arraylist* out) {
 		arraylist_append(out, &val);
 	}
 
-	return true;
+	return BUILTIN_OK;
 }

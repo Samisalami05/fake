@@ -1,8 +1,6 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
-#include "../arraylist.h"
-#include "../log.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -10,6 +8,10 @@
 #include <sys/stat.h>
 #include <errno.h>
 #endif
+
+#include "../arraylist.h"
+#include "../log.h"
+#include "../builtin.h"
 
 bool make_dir(const char *path) {
 #ifdef _WIN32
@@ -45,10 +47,10 @@ bool make_path(char *path) {
     return true;
 }
 
-bool builtin_mkdir(arraylist* args, int count, arraylist* out) {
+int builtin_mkdir(arraylist* args, int count, arraylist* out) {
 	if (count != 1) {
 		log_error("@mkdir(): Expected one arguments, got %d", count);
-		return false;
+		return BUILTIN_ERROR;
 	}
 
 	arraylist paths = args[0];
@@ -59,6 +61,6 @@ bool builtin_mkdir(arraylist* args, int count, arraylist* out) {
 		}
 	}
 
-	return true;
+	return BUILTIN_OK;
 }
 

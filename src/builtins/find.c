@@ -1,17 +1,16 @@
-#include "../arraylist.h"
-#include "../log.h"
-
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
-#include "../file.h"
-
 
 #ifndef _WIN32
 #include <sys/stat.h>
 #include <fnmatch.h>
 #endif
+
+#include "../arraylist.h"
+#include "../log.h"
+#include "../file.h"
+#include "../builtin.h"
 
 // TODO: Add [A-Z_0-9] matching
 static bool match(const char* str, const char* pattern) {
@@ -86,10 +85,10 @@ static bool find_rec(char* dir_name, arraylist patterns, arraylist* out) {
 	return true;
 }
 
-bool builtin_find(arraylist* args, int count, arraylist* out) {
+int builtin_find(arraylist* args, int count, arraylist* out) {
 	if (count == 0 || count > 2) {
 		log_error("@find(): Expected one or two arguments, got %d", count);
-		return false;
+		return BUILTIN_ERROR;
 	}
 
 	arraylist dirs = args[0];
@@ -100,5 +99,5 @@ bool builtin_find(arraylist* args, int count, arraylist* out) {
 			log_error("@find(): Failed to open dir '%s'", *dir_name);
 	}
 
-	return true;
+	return BUILTIN_OK;
 }

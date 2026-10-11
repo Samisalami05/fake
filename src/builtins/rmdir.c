@@ -1,11 +1,13 @@
 #include <stdbool.h>
+
 #include "../arraylist.h"
 #include "../log.h"
+#include "../builtin.h"
 
-bool builtin_rmdir(arraylist* args, int count, arraylist* out) {
+int builtin_rmdir(arraylist* args, int count, arraylist* out) {
 	if (count != 1) {
 		log_error("@rmdir(): Expects one argument");
-		return false;
+		return BUILTIN_ERROR;
 	}
 
     foreach (char*, path, *args) {
@@ -14,5 +16,5 @@ bool builtin_rmdir(arraylist* args, int count, arraylist* out) {
         }
     }
 
-    return true;
+    return BUILTIN_OK;
 }

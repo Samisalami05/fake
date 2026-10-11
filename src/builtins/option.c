@@ -1,12 +1,12 @@
 #include <stdbool.h>
-#include <stdio.h>
-#include <string.h>
-#include "../arraylist.h"
-#include "../log.h"
 
 #ifndef _WIN32
 #include <ncurses.h>
 #endif
+
+#include "../arraylist.h"
+#include "../log.h"
+#include "../builtin.h"
 
 #ifndef _WIN32
 
@@ -71,14 +71,14 @@ static void render(arraylist options, int pos, char *msg) {
 
 #endif
 
-bool builtin_option(arraylist* args, int count, arraylist* out) {
+int builtin_option(arraylist* args, int count, arraylist* out) {
 	if (count != 1 && count != 2) {
 		log_error("@prompt(): Expected 1 or 2 arguments, got %d", count);
-		return false;
+		return BUILTIN_ERROR;
 	}
 
 #ifdef _WIN32
-	return true; // TODO: Implement this function for windows
+	return BUILTIN_OK; // TODO: Implement this function for windows
 #else
 
 	char* msg = NULL;
@@ -127,5 +127,5 @@ bool builtin_option(arraylist* args, int count, arraylist* out) {
 	
 	endwin();
 #endif
-	return true;
+	return BUILTIN_OK;
 }

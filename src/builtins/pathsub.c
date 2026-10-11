@@ -4,6 +4,7 @@
 
 #include "../arraylist.h"
 #include "../log.h"
+#include "../builtin.h"
 
 static char* sub(char* path, char* from, char* to) {
 	int from_len = strlen(from);
@@ -40,10 +41,10 @@ static char* sub(char* path, char* from, char* to) {
 
 }
 
-bool builtin_pathsub(arraylist* args, int count, arraylist* out) {
+int builtin_pathsub(arraylist* args, int count, arraylist* out) {
 	if (count != 3) {
 		log_error("@pathsub(): Expected three arguments, got %d", count);
-		return false;
+		return BUILTIN_ERROR;
 	}
 
 	arraylist paths = args[0];
@@ -56,5 +57,5 @@ bool builtin_pathsub(arraylist* args, int count, arraylist* out) {
 		arraylist_append(out, &new);
 	}
 
-	return true;
+	return BUILTIN_OK;
 }
