@@ -138,6 +138,7 @@ void lex(Lexer* lexer) {
 			case ' ':
 			case '\t':
 			case '\n':
+			case '\r':
 			case '\0': // TODO: this might be bad, temporary fix for windows
 				lexer->pos++;
 				break;

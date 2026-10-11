@@ -21,7 +21,7 @@ bool read_file(const char* path, FileView* out) {
 	assert(out != NULL);
 
 #ifdef _WIN32
-	FILE* fp = fopen(path, "r");
+	FILE* fp = fopen(path, "rb");
 	if (!fp) return false;
 
 	fseek(fp, 0, SEEK_END);
